@@ -1,0 +1,271 @@
+import { useEffect, useMemo, useState } from 'react';
+import {
+  IonBackButton,
+  IonButton,
+  IonButtons,
+  IonContent,
+  IonDatetime,
+  IonHeader,
+  IonIcon,
+  IonInput,
+  IonItem,
+  IonLabel,
+  IonPage,
+  IonSelect,
+  IonSelectOption,
+  IonTextarea,
+  IonTitle,
+  IonToolbar,
+  IonToast,
+  IonAlert,
+  IonCheckbox,
+  IonModal,
+} from '@ionic/react';
+import { cameraOutline, imageOutline, trashOutline } from 'ionicons/icons';
+import { useIonRouter } from '@ionic/react';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { addExpenseThunk, editExpenseThunk, loadMonthThunk } from '../store/budgetSlice';
+import { VARIABLE_CATEGORIES } from '../constants';
+import { formatMoney, nowISO, toISODate, uid } from '../utils/format';
+import type { VariableExpense } from '../types';
+import { isOnline } from '../services/connectivity';
+import { offlineUpsertExpense } from '../services/sync';
+
+const AddExpense: React.FC = () => {
+  const dispatch = useAppDispatch();
+  const router = useIonRouter();
+  const { month, budget, expenses } = useAppSelector((s) => s.budget);
+  const currency = budget?.currency ?? 'MGA';
+
+  const [title, setTitle] = useState('');
+  const [amount, setAmount] = useState('');
+  const [category, setCategory] = useState('alimentation');
+  const [date, setDate] = useState(toISODate(new Date()));
+  const [description, setDescription] = useState('');
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [photo, setPhoto] = useState<string | null>(null);
+  const [showPhotoError, setShowPhotoError] = useState(false);
+  const [toast, setToast] = useState<{ message: string; color: string } | null>(null);
+  const [editing, setEditing] = useState<VariableExpense | null>(null);
+  const [showDate, setShowDate] = useState(false);
+
+  const editId = useMemo(() => new URLSearchParams(window.location.search).get('edit'), []);
+
+  useEffect(() => {
+    if (editId) {
+      const found = expenses.find((e) => e.id === editId);
+      if (found) {
+        setEditing(found);
+        setTitle(found.title);
+        setAmount(String(found.amount));
+        setCategory(found.category);
+        setDate(found.expense_date);
+        setDescription(found.description ?? '');
+        setIsRecurring(!!found.is_recurring);
+        setPhoto(found.photo_url ?? null);
+      }
+    }
+  }, [editId, expenses]);
+
+  const numAmount = Number(amount);
+  const canSubmit = title.trim().length > 0 && numAmount > 0 && budget != null;
+
+  const takePhoto = async () => {
+    try {
+      const mod = await import('@capacitor/camera');
+      const res = await mod.Camera.getPhoto({
+        resultType: mod.CameraResultType.Uri,
+        source: mod.CameraSource.Camera,
+        quality: 70,
+      });
+      setPhoto(res.webPath ?? null);
+    } catch {
+      setShowPhotoError(true);
+    }
+  };
+
+  const save = async () => {
+    if (!canSubmit || !budget) return;
+    const base: Partial<VariableExpense> = {
+      title: title.trim(),
+      amount: numAmount,
+      category: category as VariableExpense['category'],
+      expense_date: date,
+      description: description.trim() || undefined,
+      is_recurring: isRecurring,
+      photo_url: photo ?? undefined,
+    };
+
+    if (isOnline()) {
+      if (editing) {
+        const res = await dispatch(editExpenseThunk({ id: editing.id, payload: base }));
+        if (res.meta.requestStatus === 'fulfilled') {
+          setToast({ message: 'Dépense mise à jour.', color: 'success' });
+        }
+      } else {
+        const res = await dispatch(addExpenseThunk({ ...base, budget_id: budget.id }));
+        if (res.meta.requestStatus === 'fulfilled') {
+          setToast({ message: 'Dépense enregistrée.', color: 'success' });
+        }
+      }
+    } else {
+      const expense: VariableExpense = {
+        id: editing?.id ?? uid(),
+        budget_id: budget.id,
+        user_id: undefined,
+        title: base.title!,
+        amount: base.amount!,
+        expense_date: base.expense_date!,
+        category: base.category!,
+        description: base.description,
+        photo_url: base.photo_url,
+        is_recurring: base.is_recurring,
+        created_at: editing?.created_at ?? nowISO(),
+        updated_at: nowISO(),
+      };
+      await offlineUpsertExpense(expense);
+      setToast({ message: 'Enregistré hors ligne (synchronisation en attente).', color: 'warning' });
+    }
+
+    dispatch(loadMonthThunk(month));
+    setTimeout(() => router.push('/tabs/expenses'), editing ? 400 : 400);
+  };
+
+  return (
+    <IonPage>
+      <IonHeader>
+        <IonToolbar>
+          <IonButtons slot="start">
+            <IonBackButton defaultHref="/tabs/expenses" />
+          </IonButtons>
+          <IonTitle>{editing ? 'Modifier la dépense' : 'Nouvelle dépense'}</IonTitle>
+        </IonToolbar>
+      </IonHeader>
+      <IonContent className="ion-padding">
+        <IonItem style={{ marginBottom: 12 }}>
+          <IonInput
+            label="Intitulé"
+            labelPlacement="stacked"
+            value={title}
+            onIonInput={(e) => setTitle(String(e.detail.value ?? ''))}
+          />
+        </IonItem>
+
+        <IonItem style={{ marginBottom: 12 }}>
+          <IonInput
+            type="number"
+            label={`Montant (${currency})`}
+            labelPlacement="stacked"
+            inputmode="numeric"
+            value={amount}
+            onIonInput={(e) => setAmount(String(e.detail.value ?? ''))}
+          />
+        </IonItem>
+
+        <IonItem style={{ marginBottom: 12 }}>
+          <IonLabel>Catégorie</IonLabel>
+          <IonSelect
+            value={category}
+            interface="action-sheet"
+            onIonChange={(e) => setCategory(String(e.detail.value))}
+          >
+            {VARIABLE_CATEGORIES.map((c) => (
+              <IonSelectOption key={c.value} value={c.value}>
+                {c.label}
+              </IonSelectOption>
+            ))}
+          </IonSelect>
+        </IonItem>
+
+        <IonItem button onClick={() => setShowDate(true)} style={{ marginBottom: 12 }}>
+          <IonLabel>Date</IonLabel>
+          <IonLabel slot="end" color="medium">
+            {date}
+          </IonLabel>
+        </IonItem>
+
+        <IonItem style={{ marginBottom: 12 }}>
+          <IonTextarea
+            label="Description (optionnelle)"
+            labelPlacement="stacked"
+            rows={2}
+            value={description}
+            onIonInput={(e) => setDescription(String(e.detail.value ?? ''))}
+          />
+        </IonItem>
+
+        <IonItem lines="none" style={{ marginBottom: 12 }}>
+          <IonLabel>Dépense récurrente</IonLabel>
+          <IonCheckbox
+            slot="end"
+            checked={isRecurring}
+            onIonChange={(e) => setIsRecurring(e.detail.checked)}
+          />
+        </IonItem>
+
+        <div style={{ marginBottom: 16 }}>
+          {photo ? (
+            <div style={{ position: 'relative', width: '100%' }}>
+              <img src={photo} alt="Justificatif" style={{ width: '100%', borderRadius: 12, maxHeight: 220, objectFit: 'cover' }} />
+              <IonButton
+                size="small"
+                fill="clear"
+                style={{ position: 'absolute', top: 8, right: 8 }}
+                onClick={() => setPhoto(null)}
+              >
+                <IonIcon icon={trashOutline} slot="icon-only" />
+              </IonButton>
+            </div>
+          ) : (
+            <IonButton expand="block" fill="outline" onClick={takePhoto}>
+              <IonIcon icon={photo ? imageOutline : cameraOutline} slot="start" />
+              {photo ? 'Photo prise' : 'Ajouter une photo (justificatif)'}
+            </IonButton>
+          )}
+        </div>
+
+        {numAmount > 0 ? (
+          <IonLabel style={{ textAlign: 'center', display: 'block', marginBottom: 12 }}>
+            <small>{formatMoney(numAmount, currency)}</small>
+          </IonLabel>
+        ) : null}
+
+        <IonButton
+          expand="block"
+          disabled={!canSubmit}
+          onClick={save}
+        >
+          {editing ? 'Enregistrer les modifications' : 'Ajouter la dépense'}
+        </IonButton>
+
+        <IonModal isOpen={showDate} onDidDismiss={() => setShowDate(false)}>
+          <IonDatetime
+            value={date}
+            onIonChange={(e) => {
+              setDate(String(e.detail.value ?? '').slice(0, 10));
+              setShowDate(false);
+            }}
+            locale="fr-FR"
+          />
+        </IonModal>
+
+        <IonAlert
+          isOpen={showPhotoError}
+          header="Appareil photo indisponible"
+          message="Impossible d'accéder à la caméra sur cet appareil."
+          buttons={['OK']}
+          onDidDismiss={() => setShowPhotoError(false)}
+        />
+        <IonToast
+          isOpen={!!toast}
+          message={toast?.message ?? ''}
+          color={toast?.color}
+          duration={2000}
+          onDidDismiss={() => setToast(null)}
+        />
+      </IonContent>
+    </IonPage>
+  );
+};
+
+export default AddExpense;

@@ -1,0 +1,296 @@
+/* ============================================================
+   Budget-Famille — modern light UI overrides
+   ============================================================ */
+
+:root {
+  --app-bg: radial-gradient(1200px 600px at 100% -10%, rgba(25, 118, 210, 0.08), transparent 60%),
+    radial-gradient(900px 500px at -10% 10%, rgba(14, 165, 233, 0.07), transparent 55%),
+    linear-gradient(180deg, #f6f8fc 0%, #eef2f7 100%);
+  --app-card-radius: 20px;
+  --app-card-shadow: 0 10px 30px -12px rgba(15, 23, 42, 0.14);
+  --app-card-border: 1px solid rgba(15, 23, 42, 0.05);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --app-bg: linear-gradient(180deg, #0b1220 0%, #0f172a 100%);
+    --app-card-shadow: 0 10px 30px -14px rgba(0, 0, 0, 0.6);
+    --app-card-border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+}
+
+/* --- Page surface --- */
+ion-content {
+  --background: var(--app-bg);
+  --keyboard-offset: 0px;
+}
+
+/* --- Header / toolbar --- */
+ion-toolbar {
+  --background: transparent;
+  --border-color: transparent;
+  --border-width: 0;
+  padding-top: 6px;
+}
+ion-header {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.72),
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+@media (prefers-color-scheme: dark) {
+  ion-header {
+    background: linear-gradient(
+      180deg,
+      rgba(15, 23, 42, 0.72),
+      rgba(15, 23, 42, 0) 100%
+    );
+  }
+}
+ion-header ion-toolbar {
+  padding-inline: 4px;
+}
+ion-title {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* --- Cards --- */
+ion-card {
+  border-radius: var(--app-card-radius);
+  box-shadow: var(--app-card-shadow);
+  border: var(--app-card-border);
+  margin: 0 0 16px;
+  overflow: hidden;
+  animation: app-rise 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+ion-card ion-card-content {
+  padding: 16px;
+}
+
+@keyframes app-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Plain divs used as cards (dashboard / settings) */
+.dash-card,
+.settings-card {
+  background: var(--ion-card-background, #ffffff);
+  border-radius: var(--app-card-radius);
+  box-shadow: var(--app-card-shadow);
+  border: var(--app-card-border);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.dash-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 6px;
+}
+
+/* Monthly fixed-charge rows */
+.charge-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 2px;
+  border-bottom: 1px solid var(--ion-color-step-150, #eef2f6);
+  transition: opacity 0.2s ease;
+}
+.charge-row:last-of-type {
+  border-bottom: none;
+}
+
+.pay-toggle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--ion-color-medium, #64748b);
+  background: transparent;
+  color: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  padding: 0;
+  line-height: 0;
+}
+.pay-toggle ion-icon {
+  font-size: 18px;
+}
+.pay-toggle.is-paid {
+  background: var(--ion-color-success, #16a34a);
+  border-color: var(--ion-color-success, #16a34a);
+  color: #fff;
+}
+.pay-toggle:active {
+  transform: scale(0.92);
+}
+
+/* --- Buttons --- */
+ion-button {
+  --border-radius: 14px;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  --box-shadow: none;
+}
+
+/* --- Floating action button --- */
+ion-fab-button {
+  --background: linear-gradient(135deg, var(--ion-color-primary), var(--ion-color-secondary));
+  --background-activated: var(--ion-color-primary-shade);
+  --box-shadow: 0 10px 22px -8px rgba(25, 118, 210, 0.6);
+}
+
+/* --- Segments (pill) --- */
+ion-segment {
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.045);
+  padding: 3px;
+}
+ion-segment-button {
+  --border-radius: 11px;
+  text-transform: none;
+  --indicator-box-shadow: 0 4px 12px -4px rgba(15, 23, 42, 0.18);
+  font-weight: 600;
+}
+@media (prefers-color-scheme: dark) {
+  ion-segment {
+    background: rgba(255, 255, 255, 0.06);
+  }
+}
+
+/* --- Items (forms / lists inside cards) --- */
+ion-item {
+  --border-radius: 14px;
+  --padding-start: 14px;
+  --padding-end: 14px;
+  --inner-padding-end: 10px;
+  font-weight: 500;
+}
+ion-item ion-label {
+  font-weight: 600;
+}
+ion-input,
+ion-textarea,
+ion-select {
+  font-weight: 500;
+}
+
+/* --- Bottom tab bar --- */
+ion-tab-bar {
+  --background: rgba(255, 255, 255, 0.92);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border-top: 1px solid rgba(15, 23, 42, 0.06);
+  padding-bottom: env(safe-area-inset-bottom);
+  height: 60px;
+}
+ion-tab-button {
+  --color: var(--ion-color-medium);
+  --color-selected: var(--ion-color-primary);
+  font-size: 11px;
+  font-weight: 600;
+  position: relative;
+}
+ion-tab-button.tab-selected::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 28px;
+  height: 3px;
+  border-radius: 0 0 4px 4px;
+  background: linear-gradient(90deg, var(--ion-color-primary), var(--ion-color-secondary));
+}
+ion-tab-button.tab-selected ion-icon {
+  transform: translateY(-1px);
+  filter: drop-shadow(0 2px 4px rgba(25, 118, 210, 0.35));
+}
+@media (prefers-color-scheme: dark) {
+  ion-tab-bar {
+    --background: rgba(15, 23, 42, 0.92);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+}
+
+/* --- Ranges / toggles / toasts --- */
+ion-range {
+  --knob-size: 22px;
+}
+ion-toast {
+  --border-radius: 14px;
+  font-weight: 500;
+}
+ion-alert .alert-wrapper {
+  border-radius: 20px;
+}
+ion-spinner {
+  color: var(--ion-color-primary);
+}
+
+/* --- Modals --- */
+ion-modal ion-toolbar {
+  padding-top: 0;
+}
+
+/* --- Lists inset (logout etc.) --- */
+ion-list.ion-inset,
+ion-list[inset] {
+  border-radius: var(--app-card-radius);
+  overflow: hidden;
+  box-shadow: var(--app-card-shadow);
+  border: var(--app-card-border);
+}
+
+/* --- Small polish --- */
+h1,
+h2,
+h3 {
+  letter-spacing: -0.02em;
+}
+
+/* --- Auth pages (login / register) --- */
+.auth-shell {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 6vh 0 4vh;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.auth-hero {
+  text-align: center;
+}
+.auth-hero ion-icon {
+  font-size: 54px;
+  background: linear-gradient(135deg, rgba(25, 118, 210, 0.12), rgba(14, 165, 233, 0.1));
+  border-radius: 20px;
+  padding: 12px;
+}
+.auth-card {
+  background: var(--ion-card-background, #ffffff);
+  border-radius: 24px;
+  box-shadow: var(--app-card-shadow);
+  border: var(--app-card-border);
+  padding: 22px 18px;
+}
+.auth-alt-link {
+  text-align: center;
+  font-size: 13px;
+  color: var(--ion-color-medium);
+}

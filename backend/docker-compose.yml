@@ -1,0 +1,14 @@
+services:
+  backend:
+    build: .
+    image: budget-famille-backend
+    container_name: budget-famille-backend
+    ports:
+      - "${HOST_PORT:-8081}:${CONTAINER_PORT:-8081}"
+    env_file:
+      - .env
+    environment:
+      ENVIRONMENT: development
+    volumes:
+      - ./budget_famille.db:/app/budget_famille.db
+    restart: unless-stopped
