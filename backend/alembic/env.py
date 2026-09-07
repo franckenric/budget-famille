@@ -25,13 +25,13 @@ config = context.config
 fileConfig(config.config_file_name)
 
 from app.db.base import Base  # noqa
+from app.core.config import settings  # noqa: E402
 
 target_metadata = Base.metadata
 
 
 def get_url():
-    db_path = os.getenv("SQLITE_DATABASE", "budget_famille.db")
-    return f"sqlite:///{os.path.abspath(db_path)}"
+    return settings.SQLALCHEMY_DATABASE_URI
 
 
 def include_object(object, name, type_, reflected, compare_to):

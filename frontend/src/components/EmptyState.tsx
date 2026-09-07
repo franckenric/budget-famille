@@ -7,14 +7,16 @@ const EmptyState: React.FC<{
   subtitle?: string;
 }> = ({ icon = cloudOfflineOutline, title, subtitle }) => {
   return (
-    <div style={{ textAlign: 'center', padding: '32px 16px' }}>
-      <IonIcon icon={icon} style={{ fontSize: 48, color: 'var(--ion-color-medium)' }} />
+    <div className="empty-state">
+      <div className="empty-icon">
+        <IonIcon icon={icon} />
+      </div>
       <IonText>
-        <p style={{ fontWeight: 600, margin: '8px 0 4px' }}>{title}</p>
+        <p className="empty-title">{title}</p>
       </IonText>
       {subtitle ? (
         <IonText color="medium">
-          <small>{subtitle}</small>
+          <p className="empty-sub">{subtitle}</p>
         </IonText>
       ) : null}
     </div>

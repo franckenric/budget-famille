@@ -62,6 +62,7 @@ import "@ionic/react/css/display.css";
 
 import "./theme/variables.css";
 import "./theme/global.css";
+import "./index.css";
 
 const container = document.getElementById("root");
 if (!container) {

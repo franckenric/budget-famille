@@ -30,8 +30,23 @@ class Settings(BaseSettings):
 
     PROJECT_NAME: str = os.getenv("PROJECT_NAME", "Budget-Famille API")
 
-    SQLITE_DATABASE: str = os.getenv("SQLITE_DATABASE", "budget_famille.db")
-    SQLALCHEMY_DATABASE_URI: str = f"sqlite:///./{SQLITE_DATABASE}"
+    # Database settings — MySQL (voir backend/.env)
+    MYSQL_SERVER: str = os.getenv("MYSQL_SERVER", "127.0.0.1")
+    MYSQL_PORT: int = int(os.getenv("MYSQL_PORT", "3306"))
+    MYSQL_USER: str = os.getenv("MYSQL_USER", "budget")
+    MYSQL_PASSWORD: str = os.getenv("MYSQL_PASSWORD", "budget")
+    MYSQL_DB: str = os.getenv("MYSQL_DB", "budget_famille")
+
+    # URI SQLAlchemy. Elle peut être entièrement surchargée via la variable
+    # d'environnement SQLALCHEMY_DATABASE_URI (utile pour les tests qui
+    # utilisent une base SQLite jetable).
+    SQLALCHEMY_DATABASE_URI: str = os.getenv(
+        "SQLALCHEMY_DATABASE_URI",
+        (
+            f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}"
+            f"@{MYSQL_SERVER}:{MYSQL_PORT}/{MYSQL_DB}?charset=utf8mb4"
+        ),
+    )
 
     # Authentication settings
     SECRET_KEY: str = os.getenv("SECRET_KEY", secrets.token_urlsafe(32))

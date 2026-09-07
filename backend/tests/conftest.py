@@ -1,6 +1,7 @@
 import os
 
-os.environ["SQLITE_DATABASE"] = "test_budget_famille.db"
+# Les tests utilisent une base SQLite jetable (aucun serveur MySQL requis).
+os.environ["SQLALCHEMY_DATABASE_URI"] = "sqlite:///./test_budget_famille.db"
 os.environ["TESTING"] = "1"
 os.environ["SECRET_KEY"] = "test-secret-key-for-pytest"
 

@@ -82,12 +82,16 @@ const RecurringChargesSection: React.FC = () => {
     dispatch(refreshMonthThunk(month)).catch(() => undefined);
   };
 
-  const openCreate = () => {
-    setEditing(null);
+  const resetForm = () => {
     setName('');
     setAmount('');
     setDueDay('5');
     setCategory('logement');
+    setEditing(null);
+  };
+
+  const openCreate = () => {
+    resetForm();
     setOpen(true);
   };
 
@@ -100,7 +104,10 @@ const RecurringChargesSection: React.FC = () => {
     setOpen(true);
   };
 
-  const closeModal = () => setOpen(false);
+  const closeModal = () => {
+    setOpen(false);
+    resetForm();
+  };
 
   const save = async () => {
     const numAmount = Number(amount);
@@ -126,6 +133,7 @@ const RecurringChargesSection: React.FC = () => {
         color: 'success',
       });
       refreshMonth();
+      resetForm();
       setOpen(false);
     }
   };

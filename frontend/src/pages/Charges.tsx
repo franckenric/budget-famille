@@ -55,12 +55,16 @@ const Charges: React.FC = () => {
     dispatch(refreshMonthThunk(month));
   }, [month, dispatch]);
 
-  const openCreate = () => {
-    setEditing(null);
+  const resetForm = () => {
     setName('');
     setAmount('');
     setDueDay('5');
     setCategory('logement');
+    setEditing(null);
+  };
+
+  const openCreate = () => {
+    resetForm();
     setOpen(true);
   };
 
@@ -75,6 +79,7 @@ const Charges: React.FC = () => {
 
   const closeModal = () => {
     setOpen(false);
+    resetForm();
     dispatch(refreshMonthThunk(month));
   };
 
@@ -153,37 +158,51 @@ const Charges: React.FC = () => {
         </IonToolbar>
       </IonHeader>
       <IonContent className="ion-padding">
-        <IonText style={{ display: 'block', textAlign: 'center', margin: '4px 0 12px' }}>
+        <IonText style={{ display: 'block', textAlign: 'center', marginBottom: 14 }}>
           <IonNote color="medium">
             {monthLabel(month)} — les charges récurrentes de Réglages apparaissent
             automatiquement ici.
           </IonNote>
         </IonText>
-        {fixedCharges.length > 0 ? (
-          <IonItem lines="none" style={{ marginBottom: 4 }}>
-            <IonLabel>
-              <IonNote color="medium">
-                Payées : {formatMoney(paidTotal, currency)} / {formatMoney(total, currency)}
-              </IonNote>
-            </IonLabel>
-          </IonItem>
-        ) : (
-          <EmptyState
-            icon="wallet-outline"
-            title="Aucune charge fixe"
-            subtitle="Loyer, factures, abonnements — ajoutez-les avec le bouton +."
-          />
+
+        {fixedCharges.length > 0 && (
+          <div className="pay-summary">
+            <div className="pay-meta">
+              <b>{formatMoney(paidTotal, currency)}</b> / {formatMoney(total, currency)}
+              <div>payés de vos charges fixes</div>
+            </div>
+            <div className="mini-bar">
+              <div
+                className="mini-bar-fill"
+                style={{ width: total > 0 ? `${(paidTotal / total) * 100}%` : '0%' }}
+              />
+            </div>
+          </div>
         )}
 
-        {fixedCharges.map((c) => (
-          <FixedChargeItem
-            key={c.id}
-            charge={c}
-            currency={currency}
-            onToggle={toggle}
-            onEdit={openEdit}
-          />
-        ))}
+        {fixedCharges.length === 0 && (
+          <div className="tile-group">
+            <EmptyState
+              icon="wallet-outline"
+              title="Aucune charge fixe"
+              subtitle="Loyer, factures, abonnements — ajoutez-les avec le bouton +."
+            />
+          </div>
+        )}
+
+        {fixedCharges.length > 0 && (
+          <div className="tile-group">
+            {fixedCharges.map((c) => (
+              <FixedChargeItem
+                key={c.id}
+                charge={c}
+                currency={currency}
+                onToggle={toggle}
+                onEdit={openEdit}
+              />
+            ))}
+          </div>
+        )}
 
         <IonFab vertical="bottom" horizontal="end" slot="fixed">
           <IonFabButton onClick={openCreate}>

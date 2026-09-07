@@ -7,13 +7,11 @@ import {
   IonInput,
   IonItem,
   IonLabel,
-  IonList,
   IonNote,
   IonPage,
   IonTitle,
   IonToolbar,
   IonToast,
-  IonAvatar,
   IonText,
   IonCard,
   IonCardContent,
@@ -23,6 +21,7 @@ import {
   createOutline,
   ellipsisVertical,
   personAddOutline,
+  peopleOutline,
 } from 'ionicons/icons';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { loadMeThunk } from '../store/authSlice';
@@ -124,11 +123,13 @@ const Family: React.FC = () => {
       <IonContent className="ion-padding">
         {!family ? (
           <>
-            <EmptyState
-              icon="people-outline"
-              title="Aucune famille"
-              subtitle="Créez une famille et partagez votre budget, ou rejoignez-en une avec un code."
-            />
+            <div className="tile-group">
+              <EmptyState
+                icon="people-outline"
+                title="Aucune famille"
+                subtitle="Créez une famille et partagez votre budget, ou rejoignez-en une avec un code."
+              />
+            </div>
             {mode === 'create' ? (
               <IonCard>
                 <IonCardContent>
@@ -162,7 +163,7 @@ const Family: React.FC = () => {
                 </IonCardContent>
               </IonCard>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <IonButton expand="block" onClick={() => setMode('create')}>
                   <IonIcon icon={createOutline} slot="start" /> Créer une famille
                 </IonButton>
@@ -174,57 +175,59 @@ const Family: React.FC = () => {
           </>
         ) : (
           <>
-            <IonItem lines="none" style={{ marginBottom: 8 }}>
-              <IonLabel>
-                <h2 style={{ margin: 0 }}>{family.name}</h2>
-                <IonNote color="medium">{members.length} membre(s)</IonNote>
-              </IonLabel>
-            </IonItem>
+            <div className="hero-card family-header">
+              <div className="hero-inner">
+                <div className="hero-k" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <IonIcon icon={peopleOutline} /> Famille
+                </div>
+                <div className="family-name">{family.name}</div>
+                <div className="hero-k" style={{ color: 'rgba(255,255,255,0.82)' }}>
+                  {members.length} membre{members.length > 1 ? 's' : ''}
+                </div>
+              </div>
+            </div>
 
-            <IonItem lines="none" button onClick={copyCode} style={{ marginBottom: 12 }}>
-              <IonIcon icon={copyOutline} slot="start" color="primary" />
-              <IonLabel>
-                Code d'invitation : <b>{family.invite_code}</b>
-              </IonLabel>
-              <IonNote color="medium" slot="end">
+            <div className="invite-card" onClick={copyCode}>
+              <IonIcon icon={copyOutline} style={{ fontSize: 20, color: 'var(--ion-color-primary)' }} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--ion-color-medium)' }}>
+                  Code d'invitation
+                </div>
+                <div className="invite-code">{family.invite_code}</div>
+              </div>
+              <IonNote color="primary" className="invite-copy" style={{ fontWeight: 600 }}>
                 Copier
               </IonNote>
-            </IonItem>
+            </div>
 
-            <IonList inset>
+            <div className="tile-group">
               {members.map((m) => (
-                <IonItem key={m.user_id}>
-                  <IonAvatar slot="start" style={{ width: 32, height: 32, background: 'var(--ion-color-primary)' }}>
-                    <span style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 14 }}>
-                      {(m.full_name ?? m.email ?? '?')[0].toUpperCase()}
-                    </span>
-                  </IonAvatar>
-                  <IonLabel>
-                    <h2 style={{ margin: 0 }}>{m.full_name ?? m.email}</h2>
-                    <IonNote color="medium">
-                      {m.email} · {m.role}
-                    </IonNote>
-                  </IonLabel>
+                <div key={m.user_id} className="member-row">
+                  <div className="avatar-gradient">
+                    {(m.full_name ?? m.email ?? '?')[0].toUpperCase()}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="member-name">{m.full_name ?? m.email}</div>
+                    <div className="member-mail">{m.email}</div>
+                  </div>
+                  <span className={`role-badge ${m.role === 'admin' ? 'admin' : ''}`}>{m.role}</span>
                   {isAdmin && m.user_id !== user?.id ? (
                     <IonIcon
                       icon={ellipsisVertical}
-                      slot="end"
-                      style={{ fontSize: 20 }}
+                      style={{ fontSize: 20, color: 'var(--ion-color-medium)' }}
                       onClick={() => promote(m)}
                     />
                   ) : null}
-                </IonItem>
+                </div>
               ))}
-            </IonList>
+            </div>
 
-            <IonItem lines="none">
-              <IonLabel color="medium">
-                <IonNote>
-                  Fournissez l'esprit d'équipe : chaque membre a son propre budget,
-                  les montants sont additionnés pour suivre la dépense globale.
-                </IonNote>
-              </IonLabel>
-            </IonItem>
+            <div className="tile-group" style={{ padding: '14px 16px' }}>
+              <IonNote color="medium" style={{ fontSize: 13, lineHeight: 1.5 }}>
+                Fournissez l'esprit d'équipe : chaque membre a son propre budget, les
+                montants sont additionnés pour suivre la dépense globale.
+              </IonNote>
+            </div>
           </>
         )}
 

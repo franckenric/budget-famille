@@ -70,6 +70,17 @@ const AddExpense: React.FC = () => {
   const numAmount = Number(amount);
   const canSubmit = title.trim().length > 0 && numAmount > 0 && budget != null;
 
+  const resetForm = () => {
+    setTitle('');
+    setAmount('');
+    setCategory('alimentation');
+    setDate(toISODate(new Date()));
+    setDescription('');
+    setIsRecurring(false);
+    setPhoto(null);
+    setEditing(null);
+  };
+
   const takePhoto = async () => {
     try {
       const mod = await import('@capacitor/camera');
@@ -106,6 +117,7 @@ const AddExpense: React.FC = () => {
         const res = await dispatch(addExpenseThunk({ ...base, budget_id: budget.id }));
         if (res.meta.requestStatus === 'fulfilled') {
           setToast({ message: 'Dépense enregistrée.', color: 'success' });
+          resetForm();
         }
       }
     } else {
@@ -125,6 +137,7 @@ const AddExpense: React.FC = () => {
       };
       await offlineUpsertExpense(expense);
       setToast({ message: 'Enregistré hors ligne (synchronisation en attente).', color: 'warning' });
+      if (!editing) resetForm();
     }
 
     dispatch(loadMonthThunk(month));

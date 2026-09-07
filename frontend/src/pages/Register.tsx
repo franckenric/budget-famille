@@ -1,21 +1,18 @@
 import { useState } from 'react';
-import {
-  IonButton,
-  IonContent,
-  IonIcon,
-  IonInput,
-  IonItem,
-  IonLabel,
-  IonPage,
-  IonText,
-} from '@ionic/react';
-import { lockClosedOutline, mailOutline, personOutline } from 'ionicons/icons';
+import { IonContent, IonPage } from '@ionic/react';
+import { Link } from 'react-router-dom';
+import { Moon, Sun, Lock, Mail, User, Wallet } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { registerThunk } from '../store/authSlice';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useTheme } from '@/hooks/use-theme';
 
 const Register: React.FC = () => {
   const dispatch = useAppDispatch();
   const { status, error } = useAppSelector((s) => s.auth);
+  const { isDark, toggleTheme } = useTheme();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -44,91 +41,124 @@ const Register: React.FC = () => {
     );
   };
 
+  const displayedError = localError ?? error;
+
   return (
     <IonPage>
       <IonContent className="ion-padding">
-        <div className="auth-shell">
-          <div className="auth-hero">
-            <IonIcon icon={personOutline} />
-            <h1 style={{ margin: '12px 0 4px' }}>Créer un compte</h1>
-            <IonText color="medium">
-              <p style={{ margin: 0 }}>
+        <div className="relative flex min-h-screen flex-col justify-center py-8">
+          <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label="Changer de thème"
+            className="absolute top-6 right-6 inline-flex h-10 w-10 items-center justify-center rounded-full border border-input bg-background text-foreground shadow-sm transition-colors hover:bg-muted"
+          >
+            {isDark ? (
+              <Sun className="h-5 w-5" />
+            ) : (
+              <Moon className="h-5 w-5" />
+            )}
+          </button>
+
+          <div className="mx-auto w-full max-w-sm">
+            <div className="mb-8 flex flex-col items-center text-center">
+              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/30">
+                <Wallet className="h-7 w-7" />
+              </div>
+              <h1 className="text-2xl font-bold tracking-tight">
+                Créer un compte
+              </h1>
+              <p className="mt-2 text-sm text-muted-foreground">
                 Rejoignez Budget-Famille et commencez avec un budget en Ariary.
               </p>
-            </IonText>
-          </div>
+            </div>
 
-          <div className="auth-card">
-            <form onSubmit={submit}>
-              <IonItem style={{ marginBottom: 12 }}>
-                <IonIcon icon={personOutline} slot="start" />
-                <IonInput
-                  label="Nom complet"
-                  labelPlacement="stacked"
-                  value={fullName}
-                  onIonInput={(e) => setFullName(String(e.detail.value ?? ''))}
-                  autocomplete="name"
-                />
-              </IonItem>
-              <IonItem style={{ marginBottom: 12 }}>
-                <IonIcon icon={mailOutline} slot="start" />
-                <IonInput
-                  type="email"
-                  label="Email"
-                  labelPlacement="stacked"
-                  value={email}
-                  onIonInput={(e) => setEmail(String(e.detail.value ?? ''))}
-                  autocomplete="email"
-                />
-              </IonItem>
-              <IonItem style={{ marginBottom: 12 }}>
-                <IonIcon icon={lockClosedOutline} slot="start" />
-                <IonInput
-                  type="password"
-                  label="Mot de passe (min. 6 caractères)"
-                  labelPlacement="stacked"
-                  value={password}
-                  onIonInput={(e) => setPassword(String(e.detail.value ?? ''))}
-                />
-              </IonItem>
-              <IonItem style={{ marginBottom: 16 }}>
-                <IonIcon icon={lockClosedOutline} slot="start" />
-                <IonInput
-                  type="password"
-                  label="Confirmer le mot de passe"
-                  labelPlacement="stacked"
-                  value={confirm}
-                  onIonInput={(e) => setConfirm(String(e.detail.value ?? ''))}
-                />
-              </IonItem>
+            <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+              <form onSubmit={submit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="reg-name">Nom complet</Label>
+                  <div className="relative">
+                    <User className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="reg-name"
+                      type="text"
+                      placeholder="Votre nom"
+                      className="pl-10"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      autoComplete="name"
+                    />
+                  </div>
+                </div>
 
-              {localError || error ? (
-                <IonText color="danger">
-                  <p style={{ fontSize: 13, margin: '0 0 12px' }}>{localError ?? error}</p>
-                </IonText>
-              ) : null}
+                <div className="space-y-2">
+                  <Label htmlFor="reg-email">Email</Label>
+                  <div className="relative">
+                    <Mail className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="reg-email"
+                      type="email"
+                      placeholder="vous@exemple.com"
+                      className="pl-10"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      autoComplete="email"
+                    />
+                  </div>
+                </div>
 
-              <IonButton
-                type="submit"
-                expand="block"
-                disabled={!canSubmit || status === 'loading'}
-              >
-                {status === 'loading' ? 'Création...' : 'Créer mon compte'}
-              </IonButton>
-            </form>
-          </div>
+                <div className="space-y-2">
+                  <Label htmlFor="reg-password">Mot de passe</Label>
+                  <div className="relative">
+                    <Lock className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="reg-password"
+                      type="password"
+                      placeholder="Min. 6 caractères"
+                      className="pl-10"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
+                  </div>
+                </div>
 
-          <div className="auth-alt-link">
-            <p>
+                <div className="space-y-2">
+                  <Label htmlFor="reg-confirm">Confirmer le mot de passe</Label>
+                  <div className="relative">
+                    <Lock className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="reg-confirm"
+                      type="password"
+                      placeholder="••••••••"
+                      className="pl-10"
+                      value={confirm}
+                      onChange={(e) => setConfirm(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                {displayedError ? (
+                  <p className="text-sm font-medium text-destructive">
+                    {displayedError}
+                  </p>
+                ) : null}
+
+                <Button
+                  type="submit"
+                  className="w-full"
+                  size="lg"
+                  disabled={!canSubmit || status === 'loading'}
+                >
+                  {status === 'loading' ? 'Création…' : 'Créer mon compte'}
+                </Button>
+              </form>
+            </div>
+
+            <p className="mt-6 text-center text-sm text-muted-foreground">
               Déjà un compte ?{' '}
-              <IonButton
-                routerLink="/login"
-                fill="clear"
-                size="small"
-                style={{ '--padding-start': 0 }}
-              >
+              <Link to="/login" className="font-medium text-primary hover:underline">
                 Se connecter
-              </IonButton>
+              </Link>
             </p>
           </div>
         </div>

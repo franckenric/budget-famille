@@ -8,6 +8,8 @@ pydantic[email]==2.7.1
 alembic==1.13.1
 sqlalchemy==2.0.30
 pydantic-settings==2.2.1
+pymysql==1.1.1
+cryptography
 watchfiles==0.21.0
 regex
 

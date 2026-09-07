@@ -75,15 +75,13 @@
   --ion-border-color: #e2e8f0;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --ion-background-color: #0f172a;
-    --ion-background-color-rgb: 15, 23, 42;
-    --ion-text-color: #e2e8f0;
-    --ion-text-color-rgb: 226, 232, 240;
-    --ion-toolbar-background: #1e293b;
-    --ion-item-background: #1e293b;
-    --ion-card-background: #1e293b;
-    --ion-border-color: #334155;
-  }
+html.dark {
+  --ion-background-color: #0f172a;
+  --ion-background-color-rgb: 15, 23, 42;
+  --ion-text-color: #e2e8f0;
+  --ion-text-color-rgb: 226, 232, 240;
+  --ion-toolbar-background: #1e293b;
+  --ion-item-background: #1e293b;
+  --ion-card-background: #1e293b;
+  --ion-border-color: #334155;
 }

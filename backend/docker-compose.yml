@@ -1,14 +1,18 @@
 services:
-  backend:
-    build: .
-    image: budget-famille-backend
-    container_name: budget-famille-backend
-    ports:
-      - "${HOST_PORT:-8081}:${CONTAINER_PORT:-8081}"
+  api:
+    image: "${IMAGE_NAME}"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    build:
+      context: .
+      dockerfile: Dockerfile
     env_file:
       - .env
     environment:
-      ENVIRONMENT: development
+      - TESTING=${TESTING:-0} # Set to "true" to enable tests
+    ports:
+      - "${HOST_PORT}:${CONTAINER_PORT}"
     volumes:
-      - ./budget_famille.db:/app/budget_famille.db
-    restart: unless-stopped
+      - .:/app
+      - ./files:/app/files
+    command: python /app/prestart.py

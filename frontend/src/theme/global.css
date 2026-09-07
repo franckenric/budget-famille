@@ -11,7 +11,7 @@
   --app-card-border: 1px solid rgba(15, 23, 42, 0.05);
 }
 
-@media (prefers-color-scheme: dark) {
+html.dark {
   :root {
     --app-bg: linear-gradient(180deg, #0b1220 0%, #0f172a 100%);
     --app-card-shadow: 0 10px 30px -14px rgba(0, 0, 0, 0.6);
@@ -39,7 +39,7 @@ ion-header {
     rgba(255, 255, 255, 0) 100%
   );
 }
-@media (prefers-color-scheme: dark) {
+html.dark {
   ion-header {
     background: linear-gradient(
       180deg,
@@ -167,7 +167,7 @@ ion-segment-button {
   --indicator-box-shadow: 0 4px 12px -4px rgba(15, 23, 42, 0.18);
   font-weight: 600;
 }
-@media (prefers-color-scheme: dark) {
+html.dark {
   ion-segment {
     background: rgba(255, 255, 255, 0.06);
   }
@@ -221,7 +221,7 @@ ion-tab-button.tab-selected ion-icon {
   transform: translateY(-1px);
   filter: drop-shadow(0 2px 4px rgba(25, 118, 210, 0.35));
 }
-@media (prefers-color-scheme: dark) {
+html.dark {
   ion-tab-bar {
     --background: rgba(15, 23, 42, 0.92);
     border-top: 1px solid rgba(255, 255, 255, 0.06);
@@ -293,4 +293,483 @@ h3 {
   text-align: center;
   font-size: 13px;
   color: var(--ion-color-medium);
+}
+
+/* ============================================================
+   Modern punch-up — Dashboard & main tabs
+   ============================================================ */
+
+/* Section headings */
+.section-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 2px 10px;
+}
+.section-head > ion-icon {
+  font-size: 16px;
+  color: var(--ion-color-primary);
+}
+.section-head .section-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ion-color-medium);
+  margin: 0;
+}
+.section-head .section-extra {
+  margin-left: auto;
+  --padding-start: 4px;
+  --padding-end: 4px;
+}
+
+/* Month switcher */
+.month-switch {
+  display: flex;
+  align-items: center;
+  margin-bottom: 14px;
+  background: rgba(15, 23, 42, 0.045);
+  border: 1px solid rgba(15, 23, 42, 0.05);
+  border-radius: 16px;
+  padding: 4px;
+}
+html.dark .month-switch {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+.month-switch ion-button {
+  --border-radius: 12px;
+  --padding-start: 10px;
+  --padding-end: 10px;
+  margin: 0;
+}
+.month-switch .month-label {
+  flex: 1;
+  text-align: center;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+}
+
+/* Hero card (dashboard budget, family header) */
+.hero-card {
+  position: relative;
+  border-radius: 26px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  box-shadow: var(--app-card-shadow);
+  background: linear-gradient(135deg, #1565c0 0%, #0ea5e9 100%);
+}
+html.dark .hero-card {
+  background: linear-gradient(135deg, #0f2b52 0%, #134e6b 100%);
+}
+.hero-card::before,
+.hero-card::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.16), transparent 70%);
+}
+.hero-card::before {
+  width: 220px;
+  height: 220px;
+  top: -90px;
+  right: -60px;
+}
+.hero-card::after {
+  width: 150px;
+  height: 150px;
+  bottom: -70px;
+  left: -50px;
+}
+.hero-inner {
+  position: relative;
+  z-index: 1;
+  padding: 18px 18px 14px;
+  color: #fff;
+}
+.hero-inner .hero-k {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.72);
+}
+.hero-inner .hero-value {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+.hero-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+.hero-top .right {
+  text-align: right;
+}
+.hero-progress {
+  --progress-background: rgba(255, 255, 255, 0.28);
+  --progress-height: 10px;
+  --progress-border-radius: 999px;
+}
+.hero-progress-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 6px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.82);
+}
+.hero-alert {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 11px;
+}
+.hero-stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 0;
+  font-size: 13px;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+}
+.hero-stat-row .k {
+  color: rgba(255, 255, 255, 0.72);
+}
+.hero-stat-row .v {
+  font-weight: 700;
+}
+.hero-stat-row .v.dim {
+  color: rgba(255, 255, 255, 0.9);
+}
+.hero-link {
+  --color: rgba(255, 255, 255, 0.92);
+  --padding-start: 0;
+  font-weight: 600;
+}
+.hero-card ion-progress-bar {
+  --progress-background: rgba(255, 255, 255, 0.28);
+}
+
+/* Quick actions */
+.quick-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.quick-actions ion-button {
+  margin: 0;
+  height: 50px;
+  --border-radius: 16px;
+  font-weight: 600;
+}
+.quick-actions .primary-action {
+  --background: linear-gradient(135deg, var(--ion-color-primary), var(--ion-color-secondary));
+  --box-shadow: 0 12px 24px -12px rgba(25, 118, 210, 0.7);
+}
+
+/* Stat tiles */
+.stat-tiles {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.stat-tile {
+  background: var(--ion-card-background);
+  border: var(--app-card-border);
+  border-radius: 18px;
+  padding: 12px 14px;
+  box-shadow: var(--app-card-shadow);
+}
+.stat-tile.wide {
+  grid-column: 1 / -1;
+}
+.stat-tile .stat-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ion-color-medium);
+}
+.stat-tile .stat-value {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-top: 3px;
+  color: var(--ion-text-color, #0f172a);
+}
+.stat-tile .stat-sub {
+  font-size: 12px;
+  color: var(--ion-color-medium);
+  margin-top: 2px;
+}
+
+/* Tile groups (list cards) */
+.tile-group {
+  background: var(--ion-card-background);
+  border: var(--app-card-border);
+  border-radius: var(--app-card-radius);
+  box-shadow: var(--app-card-shadow);
+  overflow: hidden;
+  margin: 0 0 16px;
+}
+.tile-group ion-item {
+  --background: transparent;
+  --border-radius: 0;
+  --padding-start: 14px;
+  --padding-end: 10px;
+  --inner-padding-end: 8px;
+}
+.tile-group ion-item:last-child {
+  --inner-border-width: 0;
+}
+
+/* Filter chips */
+.chip-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  margin: 4px 0 14px;
+  scrollbar-width: none;
+}
+.chip-row::-webkit-scrollbar {
+  display: none;
+}
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  border: 1px solid var(--ion-border-color);
+  background: var(--ion-card-background);
+  color: var(--ion-color-medium);
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+.filter-chip ion-icon {
+  font-size: 15px;
+}
+.filter-chip.active {
+  background: var(--ion-color-primary);
+  border-color: var(--ion-color-primary);
+  color: #fff;
+  box-shadow: 0 8px 16px -8px rgba(25, 118, 210, 0.7);
+}
+
+/* Recent expenses rows */
+.recent-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 2px;
+  border-bottom: 1px solid var(--ion-border-color);
+}
+.recent-row:last-child {
+  border-bottom: none;
+}
+.ico-bubble {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+.recent-title {
+  font-weight: 600;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.recent-sub {
+  font-size: 12px;
+  color: var(--ion-color-medium);
+}
+.recent-amount {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--ion-color-danger);
+  margin-left: auto;
+}
+
+/* Empty state */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 36px 20px;
+}
+.empty-state .empty-icon {
+  width: 66px;
+  height: 66px;
+  border-radius: 22px;
+  background: rgba(25, 118, 210, 0.08);
+  color: var(--ion-color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+.empty-state .empty-icon ion-icon {
+  font-size: 30px;
+}
+.empty-state .empty-title {
+  font-weight: 700;
+  font-size: 15px;
+  margin: 0 0 4px;
+  color: var(--ion-text-color, #0f172a);
+}
+.empty-state .empty-sub {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--ion-color-medium);
+  margin: 0;
+  max-width: 260px;
+}
+
+/* Family */
+.member-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--ion-border-color);
+}
+.member-row:last-child {
+  border-bottom: none;
+}
+.avatar-gradient {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, var(--ion-color-primary), var(--ion-color-secondary));
+  color: #fff;
+  font-weight: 700;
+  font-size: 17px;
+}
+.member-name {
+  font-weight: 600;
+  font-size: 14px;
+}
+.member-mail {
+  font-size: 12px;
+  color: var(--ion-color-medium);
+}
+.role-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: capitalize;
+  background: rgba(25, 118, 210, 0.12);
+  color: var(--ion-color-primary);
+}
+.role-badge.admin {
+  background: rgba(139, 92, 246, 0.14);
+  color: #8b5cf6;
+}
+.family-header .hero-inner {
+  padding: 20px 18px;
+}
+.family-name {
+  font-weight: 800;
+  font-size: 24px;
+  letter-spacing: -0.02em;
+  color: #fff;
+  margin: 2px 0 2px;
+}
+.invite-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--ion-card-background);
+  border: var(--app-card-border);
+  border-radius: 18px;
+  padding: 14px 16px;
+  box-shadow: var(--app-card-shadow);
+  margin-bottom: 16px;
+  cursor: pointer;
+}
+.invite-code {
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--ion-color-primary);
+  font-size: 16px;
+}
+.invite-copy {
+  margin-left: auto;
+}
+
+/* Charges summary */
+.pay-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  background: var(--ion-card-background);
+  border: var(--app-card-border);
+  border-radius: 18px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  box-shadow: var(--app-card-shadow);
+}
+.pay-summary .pay-meta {
+  font-size: 12px;
+  color: var(--ion-color-medium);
+}
+.pay-summary .pay-meta b {
+  color: var(--ion-text-color, #0f172a);
+}
+.mini-bar {
+  flex: 1;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+}
+html.dark .mini-bar {
+  background: rgba(255, 255, 255, 0.1);
+}
+.mini-bar .mini-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--ion-color-success), #34d399);
+  transition: width 0.3s ease;
+}
+
+/* Chart cards */
+.chart-card ion-card-content {
+  padding: 16px 10px 12px;
+}
+ion-modal ion-header ion-toolbar {
+  --background: var(--ion-card-background);
+  border-bottom: 1px solid var(--ion-border-color);
+}
+ion-modal ion-toolbar ion-title {
+  font-size: 16px;
 }

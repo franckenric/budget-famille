@@ -47,7 +47,9 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=True),
         sa.Column("deleted_at", sa.DateTime(), nullable=True),
-        sa.ForeignKeyConstraint(["family_id"], ["families.id"]),
+        # NOTE: la FK vers families.id est ajoutée plus bas via ALTER :
+        # MySQL valide les références à la création (contrairement à SQLite),
+        # et il existe une dépendance circulaire users.family_id <-> families.
         sa.ForeignKeyConstraint(["role_id"], ["roles.id"]),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -67,6 +69,11 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index(op.f("ix_families_invite_code"), "families", ["invite_code"], unique=True)
+
+    # Ajout différé de la FK users.family_id -> families.id (dépendance circulaire).
+    op.create_foreign_key(
+        "fk_users_family_id", "users", "families", ["family_id"], ["id"]
+    )
 
     op.create_table(
         "family_members",
@@ -150,6 +157,9 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    # MySQL refuse de dropper families tant que users la référence :
+    # on retire d'abord la FK ajoutée dans upgrade().
+    op.drop_constraint("fk_users_family_id", "users", type_="foreignkey")
     op.drop_table("variable_expenses")
     op.drop_table("fixed_charges")
     op.drop_table("budgets")

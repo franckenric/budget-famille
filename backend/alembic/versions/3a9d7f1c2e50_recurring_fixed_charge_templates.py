@@ -41,25 +41,34 @@ def upgrade() -> None:
 
     # Les charges fixes existantes deviennent des occurrences mensuelles :
     # on lie au gabarit (optionnel) et on mémorise le mois.
-    with op.batch_alter_table("fixed_charges") as batch_op:
-        batch_op.add_column(sa.Column("template_id", sa.String(length=36), nullable=True))
-        batch_op.add_column(sa.Column("month", sa.String(length=7), nullable=True))
-        batch_op.create_foreign_key(
-            "fk_fixed_charges_template_id",
-            "fixed_charge_templates",
-            ["template_id"],
-            ["id"],
-        )
-        batch_op.create_index(
-            op.f("ix_fixed_charges_template_id"),
-            ["template_id"],
-            unique=False,
-        )
-        batch_op.create_index(
-            op.f("ix_fixed_charges_month"),
-            ["month"],
-            unique=False,
-        )
+    # (Opérations directes : op.batch_alter_table est un pattern SQLite.)
+    op.add_column(
+        "fixed_charges",
+        sa.Column("template_id", sa.String(length=36), nullable=True),
+    )
+    op.add_column(
+        "fixed_charges",
+        sa.Column("month", sa.String(length=7), nullable=True),
+    )
+    op.create_foreign_key(
+        "fk_fixed_charges_template_id",
+        "fixed_charges",
+        "fixed_charge_templates",
+        ["template_id"],
+        ["id"],
+    )
+    op.create_index(
+        op.f("ix_fixed_charges_template_id"),
+        "fixed_charges",
+        ["template_id"],
+        unique=False,
+    )
+    op.create_index(
+        op.f("ix_fixed_charges_month"),
+        "fixed_charges",
+        ["month"],
+        unique=False,
+    )
 
 
 def downgrade() -> None:

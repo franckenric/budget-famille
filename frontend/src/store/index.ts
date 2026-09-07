@@ -7,8 +7,13 @@ export interface SettingsState {
   theme: 'auto' | 'light' | 'dark';
 }
 
+const loadTheme = (): SettingsState['theme'] => {
+  const stored = localStorage.getItem('bf_theme') as SettingsState['theme'] | null;
+  return stored === 'light' || stored === 'dark' ? stored : 'auto';
+};
+
 const initialState: SettingsState = {
-  theme: 'auto',
+  theme: loadTheme(),
 };
 
 const settingsSlice = createSlice({
@@ -17,6 +22,7 @@ const settingsSlice = createSlice({
   reducers: {
     setTheme(state, action: PayloadAction<SettingsState['theme']>) {
       state.theme = action.payload;
+      localStorage.setItem('bf_theme', action.payload);
     },
   },
 });

@@ -6,14 +6,11 @@ import {
   IonHeader,
   IonIcon,
   IonPage,
-  IonSegment,
-  IonSegmentButton,
-  IonText,
   IonTitle,
   IonToolbar,
-  IonLabel,
   IonAlert,
   IonToast,
+  IonLabel,
 } from '@ionic/react';
 import { add } from 'ionicons/icons';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
@@ -23,14 +20,13 @@ import EmptyState from '../components/EmptyState';
 import { VARIABLE_CATEGORIES } from '../constants';
 import type { VariableExpense } from '../types';
 import { useIonRouter } from '@ionic/react';
-
-type Segment = 'tous' | string;
+import { formatMoney } from '../utils/format';
 
 const Expenses: React.FC = () => {
   const dispatch = useAppDispatch();
   const router = useIonRouter();
   const { month, expenses, budget } = useAppSelector((s) => s.budget);
-  const [segment, setSegment] = useState<Segment>('tous');
+  const [segment, setSegment] = useState('tous');
   const [toDelete, setToDelete] = useState<VariableExpense | null>(null);
   const [toast, setToast] = useState<{ message: string; color: string } | null>(null);
 
@@ -60,32 +56,43 @@ const Expenses: React.FC = () => {
       <IonHeader>
         <IonToolbar>
           <IonTitle>Dépenses</IonTitle>
+          <IonLabel slot="end" style={{ fontSize: 13, marginRight: 16, fontWeight: 600, color: 'var(--ion-color-medium)' }}>
+            {formatMoney(total, currency)}
+          </IonLabel>
         </IonToolbar>
       </IonHeader>
       <IonContent className="ion-padding">
-        <IonSegment
-          value={segment}
-          scrollable
-          onIonChange={(e) => setSegment(String(e.detail.value ?? 'tous'))}
-          style={{ marginBottom: 8 }}
-        >
-          <IonSegmentButton value="tous">
-            <IonLabel>Tous</IonLabel>
-          </IonSegmentButton>
+        <div className="chip-row">
+          <button
+            type="button"
+            className={`filter-chip ${segment === 'tous' ? 'active' : ''}`}
+            onClick={() => setSegment('tous')}
+          >
+            Tous
+          </button>
           {VARIABLE_CATEGORIES.map((c) => (
-            <IonSegmentButton key={c.value} value={c.value}>
-              <IonLabel style={{ fontSize: 12 }}>{c.label}</IonLabel>
-            </IonSegmentButton>
+            <button
+              key={c.value}
+              type="button"
+              className={`filter-chip ${segment === c.value ? 'active' : ''}`}
+              onClick={() => setSegment(c.value)}
+            >
+              <IonIcon icon={c.icon} style={{ color: segment === c.value ? '#fff' : c.color }} />
+              {c.label}
+            </button>
           ))}
-        </IonSegment>
+        </div>
 
         {filtered.length === 0 ? (
-          <EmptyState
-            title="Aucune dépense"
-            subtitle="Utilisez le bouton + pour enregistrer une dépense."
-          />
+          <div className="tile-group">
+            <EmptyState
+              icon="receipt-outline"
+              title="Aucune dépense"
+              subtitle="Utilisez le bouton + pour enregistrer une dépense."
+            />
+          </div>
         ) : (
-          <div>
+          <div className="tile-group">
             {filtered.map((e) => (
               <ExpenseItem
                 key={e.id}
