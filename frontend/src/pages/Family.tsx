@@ -42,7 +42,7 @@ const Family: React.FC = () => {
   const loadFamily = async () => {
     try {
       const f = await fetchMyFamily();
-      setFamily(f.id ? f : null);
+      setFamily(f?.id ? f : null);
     } catch {
       setFamily(null);
     }

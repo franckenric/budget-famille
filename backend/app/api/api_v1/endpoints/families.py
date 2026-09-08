@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -10,11 +10,9 @@ from app.enum.role_type import FamilyRoleType
 router = APIRouter()
 
 
-def _get_my_family(db: Session, current_user: models.Users) -> models.Families:
+def _get_my_family(db: Session, current_user: models.Users) -> Optional[models.Families]:
     if not current_user.family_id:
-        raise HTTPException(
-            status_code=404, detail="User is not part of any family"
-        )
+        return None
     family = crud.families.get(db, id=current_user.family_id)
     if not family:
         raise HTTPException(status_code=404, detail="Family not found")
@@ -33,7 +31,7 @@ def _to_member_out(member: models.FamilyMembers) -> schemas.FamilyMembersOut:
     )
 
 
-@router.get("/me", response_model=schemas.FamiliesWithMembers)
+@router.get("/me", response_model=Optional[schemas.FamiliesWithMembers])
 def read_my_family(
     *,
     db: Session = Depends(deps.get_db),
@@ -41,8 +39,11 @@ def read_my_family(
 ) -> Any:
     """
     Fetch la famille du user courant avec ses membres.
+    Renvoie null si le user n'est dans aucune famille.
     """
     family = _get_my_family(db, current_user)
+    if not family:
+        return None
     members = crud.family_members.list_with_user(db, family_id=family.id)
     return schemas.FamiliesWithMembers(
         id=family.id,
@@ -64,6 +65,10 @@ def read_family_summary(
     Agrégation du budget des membres de la famille pour un mois donné.
     """
     family = _get_my_family(db, current_user)
+    if not family:
+        raise HTTPException(
+            status_code=404, detail="User is not part of any family"
+        )
     members = crud.family_members.list_with_user(db, family_id=family.id)
     member_budgets = []
     total_capital = 0.0

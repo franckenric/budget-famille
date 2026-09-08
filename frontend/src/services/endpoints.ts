@@ -178,7 +178,7 @@ export function joinFamily(inviteCode: string) {
 }
 
 export function fetchMyFamily() {
-  return api.get<Family>('/families/me');
+  return api.get<Family | null>('/families/me');
 }
 
 export function updateMemberRole(userId: string, role: FamilyMember['role']) {
