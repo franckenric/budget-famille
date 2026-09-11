@@ -70,6 +70,12 @@ export interface FixedChargeTemplate {
   updated_at?: string;
 }
 
+export interface ExpenseDetail {
+  description: string;
+  quantity: number;
+  unit_price: number;
+}
+
 export interface VariableExpense {
   id: string;
   budget_id: string;
@@ -81,6 +87,29 @@ export interface VariableExpense {
   description?: string;
   photo_url?: string;
   is_recurring?: boolean;
+  details?: ExpenseDetail[];
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface DebtPayment {
+  date: string;
+  amount: number;
+}
+
+export interface Debt {
+  id: string;
+  budget_id?: string | null;
+  user_id?: string;
+  lender_name: string;
+  amount: number;
+  reason?: string;
+  debt_date: string;
+  monthly_amount?: number | null;
+  start_date?: string | null;
+  is_repaid: boolean;
+  repaid_date?: string | null;
+  payments?: DebtPayment[];
   created_at?: string;
   updated_at?: string;
 }

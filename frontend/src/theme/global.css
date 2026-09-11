@@ -24,6 +24,12 @@ ion-content {
   --background: var(--app-bg);
   --keyboard-offset: 0px;
 }
+ion-content.page-pad {
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --padding-top: 16px;
+  --padding-bottom: 16px;
+}
 
 /* --- Header / toolbar --- */
 ion-toolbar {
@@ -160,6 +166,29 @@ ion-segment {
   border-radius: 14px;
   background: rgba(15, 23, 42, 0.045);
   padding: 3px;
+}
+
+/* View toggle on dashboard */
+.view-toggle {
+  margin-bottom: 12px;
+  --background: var(--ion-card-background, #ffffff);
+  border: var(--app-card-border);
+  box-shadow: 0 2px 8px -4px rgba(15, 23, 42, 0.1);
+  padding: 3px;
+}
+.view-toggle ion-segment-button {
+  --border-radius: 12px;
+  --indicator-box-shadow: none;
+  font-weight: 600;
+  font-size: 13px;
+  min-height: 38px;
+}
+.view-toggle ion-segment-button ion-icon {
+  font-size: 16px;
+  margin-right: 4px;
+}
+html.dark .view-toggle {
+  box-shadow: 0 2px 8px -4px rgba(0, 0, 0, 0.4);
 }
 ion-segment-button {
   --border-radius: 11px;
@@ -542,6 +571,7 @@ html.dark .hero-card {
   padding-bottom: 6px;
   margin: 4px 0 14px;
   scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
 }
 .chip-row::-webkit-scrollbar {
   display: none;
@@ -551,6 +581,7 @@ html.dark .hero-card {
   align-items: center;
   gap: 6px;
   white-space: nowrap;
+  flex-shrink: 0;
   padding: 8px 14px;
   border-radius: 999px;
   font-size: 13px;
@@ -561,6 +592,91 @@ html.dark .hero-card {
   color: var(--ion-color-medium);
   transition: all 0.15s ease;
   cursor: pointer;
+}
+
+/* Modern filter button */
+.filter-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  border-radius: 16px;
+  border: 1px solid var(--ion-border-color);
+  background: var(--ion-card-background, #fff);
+  box-shadow: var(--app-card-shadow);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ion-text-color, #0f172a);
+  font-family: inherit;
+  cursor: pointer;
+  transition: box-shadow 0.15s ease;
+}
+.filter-btn:active {
+  box-shadow: 0 2px 8px -4px rgba(15, 23, 42, 0.15);
+}
+.filter-btn ion-icon:first-child {
+  font-size: 18px;
+  color: var(--ion-color-primary);
+}
+.filter-btn-chevron {
+  margin-left: auto;
+  font-size: 16px;
+  color: var(--ion-color-medium);
+}
+html.dark .filter-btn {
+  background: var(--ion-card-background, #1e293b);
+}
+
+/* Debt banner — shown when budget exceeded */
+.debt-banner {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: var(--app-card-radius);
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 12px -4px rgba(245, 158, 11, 0.3);
+}
+html.dark .debt-banner {
+  background: linear-gradient(135deg, #422006, #713f12);
+  border-color: rgba(251, 191, 36, 0.3);
+}
+.debt-banner-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.debt-banner-header ion-icon {
+  font-size: 20px;
+  color: #d97706;
+}
+.debt-banner-title {
+  font-weight: 700;
+  font-size: 14px;
+  color: #92400e;
+}
+html.dark .debt-banner-title {
+  color: #fbbf24;
+}
+.debt-banner-amount {
+  font-size: 13px;
+  color: #b45309;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+html.dark .debt-banner-amount {
+  color: #fcd34d;
+}
+.debt-action-btn {
+  --background: linear-gradient(135deg, #f59e0b, #d97706);
+  --color: #fff;
+  --border-radius: 12px;
+  --box-shadow: 0 6px 14px -4px rgba(217, 119, 6, 0.6);
+  font-weight: 600;
+  height: 38px;
+  font-size: 13px;
 }
 .filter-chip ion-icon {
   font-size: 15px;

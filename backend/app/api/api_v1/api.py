@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from app.api.api_v1.endpoints import (
     budgets,
+    debts,
     export,
     families,
     fixed_charge_templates,
@@ -16,6 +17,7 @@ api_router = APIRouter()
 api_router.include_router(login.router, prefix="/login", tags=["login"])
 api_router.include_router(users.router, prefix="/users", tags=["users"])
 api_router.include_router(budgets.router, prefix="/budgets", tags=["budgets"])
+api_router.include_router(debts.router, prefix="/debts", tags=["debts"])
 api_router.include_router(
     fixed_charges.router, prefix="/fixed_charges", tags=["fixed_charges"]
 )

@@ -8,6 +8,7 @@ from sqlalchemy import (
     String,
     Text,
 )
+from sqlalchemy.dialects.mysql import JSON as MySQLJSON
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base, IdMixin
@@ -28,6 +29,7 @@ class VariableExpenses(IdMixin, Base):
     description = Column(Text, nullable=True)
     photo_url = Column(String(500), nullable=True)
     is_recurring = Column(Boolean, nullable=False, default=False)
+    details = Column(MySQLJSON, nullable=True, default=list)
 
     # Relations
     budget = relationship(

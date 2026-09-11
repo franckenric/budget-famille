@@ -1,4 +1,5 @@
 from .budgets import Budgets
+from .debts import Debts
 from .families import Families
 from .family_members import FamilyMembers
 from .fixed_charges import FixedChargeTemplates, FixedCharges

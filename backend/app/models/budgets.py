@@ -40,6 +40,12 @@ class Budgets(IdMixin, Base):
         foreign_keys="VariableExpenses.budget_id",
         cascade="all, delete-orphan",
     )
+    debts = relationship(
+        "Debts",
+        back_populates="budget",
+        foreign_keys="Debts.budget_id",
+        cascade="all, delete-orphan",
+    )
 
     __table_args__ = (
         UniqueConstraint("user_id", "month", name="uq_budgets_user_month"),

@@ -69,3 +69,30 @@ export function uid(): string {
 export function nowISO(): string {
   return new Date().toISOString();
 }
+
+/* --- Week helpers --- */
+
+export type ViewMode = 'month' | 'week';
+
+export function getWeekRange(refDate: Date = new Date()): { start: string; end: string } {
+  const d = new Date(refDate);
+  const day = d.getDay();
+  const diffToMonday = (day + 6) % 7;
+  const monday = new Date(d);
+  monday.setDate(d.getDate() - diffToMonday);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  return { start: toISODate(monday), end: toISODate(sunday) };
+}
+
+export function weekLabel(refDate: Date = new Date()): string {
+  const { start, end } = getWeekRange(refDate);
+  const s = new Date(`${start}T00:00:00`);
+  const e = new Date(`${end}T00:00:00`);
+  const fmtShort = (dt: Date) => dt.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+  return `${fmtShort(s)} – ${fmtShort(e)}`;
+}
+
+export function isDateInRange(isoDate: string, start: string, end: string): boolean {
+  return isoDate >= start && isoDate <= end;
+}

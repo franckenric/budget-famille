@@ -14,7 +14,8 @@ const ALERT_ICONS: Record<string, string> = {
 const BudgetProgress: React.FC<{
   summary: BudgetSummary | null;
   currency: string;
-}> = ({ summary, currency }) => {
+  debtPayments?: number;
+}> = ({ summary, currency, debtPayments = 0 }) => {
   if (!summary) {
     return (
       <div className="hero-card">
@@ -31,12 +32,18 @@ const BudgetProgress: React.FC<{
 
   const alert = ALERT_LEVELS[summary.alert_level];
   const alertColor = alert.color;
+
+  const adjustedSpent = summary.total_spent + debtPayments;
+  const adjustedCapital = summary.capital;
+  const adjustedRemaining = Math.max(0, summary.remaining - debtPayments);
+  const adjustedPercent = adjustedCapital > 0 ? (adjustedSpent / adjustedCapital) * 100 : 0;
+
   const barColor =
-    summary.alert_level === 'none'
-      ? 'success'
-      : summary.alert_level === 'yellow'
+    adjustedPercent >= 100
+      ? 'danger'
+      : adjustedPercent >= (summary.alert_level === 'yellow' ? 70 : 85)
         ? 'warning'
-        : 'danger';
+        : 'success';
 
   return (
     <div className="hero-card">
@@ -44,23 +51,23 @@ const BudgetProgress: React.FC<{
         <div className="hero-top">
           <div>
             <div className="hero-k">Dépenses du mois</div>
-            <div className="hero-value">{formatMoney(summary.total_spent, currency)}</div>
+            <div className="hero-value">{formatMoney(adjustedSpent, currency)}</div>
           </div>
           <div className="right">
             <div className="hero-k">Capital</div>
             <div style={{ fontSize: 17, fontWeight: 700 }}>
-              {formatMoney(summary.capital, currency)}
+              {formatMoney(adjustedCapital, currency)}
             </div>
           </div>
         </div>
 
         <IonProgressBar
           className="hero-progress"
-          value={Math.min(summary.percent_spent / 100, 1.2)}
+          value={Math.min(adjustedPercent / 100, 1.2)}
           color={barColor}
         />
         <div className="hero-progress-row">
-          <span>{Math.round(summary.percent_spent)} %</span>
+          <span>{Math.round(adjustedPercent)} %</span>
           <span
             className="hero-alert"
             style={{
@@ -74,8 +81,16 @@ const BudgetProgress: React.FC<{
 
         <div className="hero-stat-row">
           <span className="k">Restant</span>
-          <span className="v">{formatMoney(summary.remaining, currency)}</span>
+          <span className="v">{formatMoney(adjustedRemaining, currency)}</span>
         </div>
+        {debtPayments > 0 && (
+          <div className="hero-stat-row">
+            <span className="k">Remboursement emprunts</span>
+            <span className="v" style={{ color: '#f97316' }}>
+              − {formatMoney(debtPayments, currency)}
+            </span>
+          </div>
+        )}
         <div className="hero-stat-row">
           <span className="k">Charges fixes</span>
           <span className="v dim">

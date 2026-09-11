@@ -1,6 +1,7 @@
 import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import authReducer from './authSlice';
 import budgetReducer from './budgetSlice';
+import debtsReducer from './debtsSlice';
 import templatesReducer from './templatesSlice';
 
 export interface SettingsState {
@@ -33,6 +34,7 @@ export const store = configureStore({
   reducer: {
     auth: authReducer,
     budget: budgetReducer,
+    debts: debtsReducer,
     templates: templatesReducer,
     settings: settingsSlice.reducer,
   },

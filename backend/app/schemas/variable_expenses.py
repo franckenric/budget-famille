@@ -5,6 +5,12 @@ from pydantic import BaseModel, ConfigDict, Field
 from app.enum.variable_category import VariableCategory
 
 
+class ExpenseDetail(BaseModel):
+    description: str
+    quantity: float = Field(ge=0)
+    unit_price: float = Field(ge=0)
+
+
 class VariableExpensesBase(BaseModel):
     title: Optional[str] = None
     amount: Optional[float] = Field(default=None, ge=0)
@@ -13,6 +19,7 @@ class VariableExpensesBase(BaseModel):
     description: Optional[str] = None
     photo_url: Optional[str] = None
     is_recurring: Optional[bool] = False
+    details: Optional[List[ExpenseDetail]] = None
 
 
 class VariableExpensesCreate(VariableExpensesBase):

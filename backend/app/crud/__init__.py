@@ -1,4 +1,5 @@
 from .crud_budgets import budgets
+from .crud_debts import debts
 from .crud_families import families
 from .crud_family_members import family_members
 from .crud_fixed_charges import fixed_charges

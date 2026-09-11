@@ -6,6 +6,13 @@ from .budgets import (
     BudgetSummary,
     ResponseBudgetSummary,
 )
+from .debts import (
+    DebtPayment,
+    Debts,
+    DebtsCreate,
+    DebtsUpdate,
+    ResponseDebts,
+)
 from .families import (
     Families,
     FamiliesCreate,

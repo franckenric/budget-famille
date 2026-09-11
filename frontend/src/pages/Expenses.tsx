@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
+  IonActionSheet,
   IonContent,
   IonFab,
   IonFabButton,
@@ -12,7 +13,7 @@ import {
   IonToast,
   IonLabel,
 } from '@ionic/react';
-import { add } from 'ionicons/icons';
+import { add, funnel, chevronDown } from 'ionicons/icons';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { refreshMonthThunk, removeExpenseThunk } from '../store/budgetSlice';
 import ExpenseItem from '../components/ExpenseItem';
@@ -29,6 +30,12 @@ const Expenses: React.FC = () => {
   const [segment, setSegment] = useState('tous');
   const [toDelete, setToDelete] = useState<VariableExpense | null>(null);
   const [toast, setToast] = useState<{ message: string; color: string } | null>(null);
+
+  const [showFilter, setShowFilter] = useState(false);
+
+  const activeCategory = segment === 'tous'
+    ? null
+    : VARIABLE_CATEGORIES.find((c) => c.value === segment);
 
   const currency = budget?.currency ?? 'MGA';
 
@@ -62,26 +69,34 @@ const Expenses: React.FC = () => {
         </IonToolbar>
       </IonHeader>
       <IonContent className="ion-padding">
-        <div className="chip-row">
-          <button
-            type="button"
-            className={`filter-chip ${segment === 'tous' ? 'active' : ''}`}
-            onClick={() => setSegment('tous')}
-          >
-            Tous
-          </button>
-          {VARIABLE_CATEGORIES.map((c) => (
-            <button
-              key={c.value}
-              type="button"
-              className={`filter-chip ${segment === c.value ? 'active' : ''}`}
-              onClick={() => setSegment(c.value)}
-            >
-              <IonIcon icon={c.icon} style={{ color: segment === c.value ? '#fff' : c.color }} />
-              {c.label}
-            </button>
-          ))}
-        </div>
+        <button
+          type="button"
+          className="filter-btn"
+          onClick={() => setShowFilter(true)}
+        >
+          <IonIcon icon={funnel} />
+          <span>{activeCategory ? activeCategory.label : 'Toutes les catégories'}</span>
+          <IonIcon icon={chevronDown} className="filter-btn-chevron" />
+        </button>
+
+        <IonActionSheet
+          isOpen={showFilter}
+          onDidDismiss={() => setShowFilter(false)}
+          header="Filtrer par catégorie"
+          buttons={[
+            {
+              text: 'Toutes les catégories',
+              icon: funnel,
+              handler: () => setSegment('tous'),
+            },
+            ...VARIABLE_CATEGORIES.map((c) => ({
+              text: c.label,
+              icon: c.icon,
+              handler: () => setSegment(c.value),
+            })),
+            { text: 'Annuler', role: 'cancel' },
+          ]}
+        />
 
         {filtered.length === 0 ? (
           <div className="tile-group">

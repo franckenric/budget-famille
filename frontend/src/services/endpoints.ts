@@ -4,6 +4,7 @@ import type {
   BudgetSummary,
   CategoryStats,
   CompareItem,
+  Debt,
   Family,
   FamilyMember,
   FamilySummary,
@@ -220,4 +221,34 @@ export function pullSync(since: string) {
 
 export function pushSync(items: PushItem[]) {
   return api.request<PushResponse>('/sync/push', { method: 'POST', body: { items } });
+}
+
+// ---- Debts (emprunts / avances) ----
+export async function listDebts(month?: string): Promise<Debt[]> {
+  const res = await api.get<ListResponse<Debt>>('/debts/?limit=200');
+  return res.data ?? [];
+}
+
+export function createDebt(payload: Partial<Debt> & { lender_name: string; amount: number; debt_date: string }) {
+  return api.request<Debt>('/debts/', { method: 'POST', body: payload });
+}
+
+export function updateDebt(id: string, payload: Partial<Debt>) {
+  return api.request<Debt>(`/debts/${id}`, { method: 'PUT', body: payload });
+}
+
+export function recordDebtPayment(id: string, payment: { date: string; amount: number }) {
+  return api.request<Debt>(`/debts/${id}/payments`, { method: 'POST', body: payment });
+}
+
+export function removeDebtPayment(id: string, index: number) {
+  return api.request<Debt>(`/debts/${id}/payments/${index}`, { method: 'DELETE' });
+}
+
+export function markDebtRepaid(id: string) {
+  return api.request<Debt>(`/debts/${id}/repay`, { method: 'PATCH' });
+}
+
+export function deleteDebt(id: string) {
+  return api.request<{ msg: string }>(`/debts/${id}`, { method: 'DELETE' });
 }

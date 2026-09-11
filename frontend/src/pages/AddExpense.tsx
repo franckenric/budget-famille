@@ -20,16 +20,20 @@ import {
   IonAlert,
   IonCheckbox,
   IonModal,
+  IonSegment,
+  IonSegmentButton,
 } from '@ionic/react';
-import { cameraOutline, imageOutline, trashOutline } from 'ionicons/icons';
+import { add, cameraOutline, imageOutline, trashOutline } from 'ionicons/icons';
 import { useIonRouter } from '@ionic/react';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { addExpenseThunk, editExpenseThunk, loadMonthThunk } from '../store/budgetSlice';
 import { VARIABLE_CATEGORIES } from '../constants';
 import { formatMoney, nowISO, toISODate, uid } from '../utils/format';
-import type { VariableExpense } from '../types';
+import type { VariableExpense, ExpenseDetail } from '../types';
 import { isOnline } from '../services/connectivity';
 import { offlineUpsertExpense } from '../services/sync';
+
+const emptyDetail = (): ExpenseDetail => ({ description: '', quantity: 1, unit_price: 0 });
 
 const AddExpense: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -49,6 +53,9 @@ const AddExpense: React.FC = () => {
   const [editing, setEditing] = useState<VariableExpense | null>(null);
   const [showDate, setShowDate] = useState(false);
 
+  const [mode, setMode] = useState<'simple' | 'detailed'>('simple');
+  const [details, setDetails] = useState<ExpenseDetail[]>([emptyDetail()]);
+
   const editId = useMemo(() => new URLSearchParams(window.location.search).get('edit'), []);
 
   useEffect(() => {
@@ -63,12 +70,29 @@ const AddExpense: React.FC = () => {
         setDescription(found.description ?? '');
         setIsRecurring(!!found.is_recurring);
         setPhoto(found.photo_url ?? null);
+        if (found.details && found.details.length > 0) {
+          setMode('detailed');
+          setDetails(found.details);
+        }
       }
     }
   }, [editId, expenses]);
 
+  const detailsTotal = details.reduce((s, d) => s + d.quantity * d.unit_price, 0);
   const numAmount = Number(amount);
-  const canSubmit = title.trim().length > 0 && numAmount > 0 && budget != null;
+  const effectiveAmount = mode === 'detailed' ? detailsTotal : numAmount;
+  const canSubmit = title.trim().length > 0 && effectiveAmount > 0 && budget != null;
+
+  const updateDetail = (index: number, field: keyof ExpenseDetail, value: string | number) => {
+    setDetails((prev) => prev.map((d, i) => (i === index ? { ...d, [field]: value } : d)));
+  };
+
+  const addDetail = () => setDetails((prev) => [...prev, emptyDetail()]);
+
+  const removeDetail = (index: number) => {
+    if (details.length <= 1) return;
+    setDetails((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const resetForm = () => {
     setTitle('');
@@ -79,6 +103,8 @@ const AddExpense: React.FC = () => {
     setIsRecurring(false);
     setPhoto(null);
     setEditing(null);
+    setMode('simple');
+    setDetails([emptyDetail()]);
   };
 
   const takePhoto = async () => {
@@ -99,12 +125,13 @@ const AddExpense: React.FC = () => {
     if (!canSubmit || !budget) return;
     const base: Partial<VariableExpense> = {
       title: title.trim(),
-      amount: numAmount,
+      amount: effectiveAmount,
       category: category as VariableExpense['category'],
       expense_date: date,
       description: description.trim() || undefined,
       is_recurring: isRecurring,
       photo_url: photo ?? undefined,
+      details: mode === 'detailed' ? details.filter((d) => d.description.trim()) : undefined,
     };
 
     if (isOnline()) {
@@ -132,6 +159,7 @@ const AddExpense: React.FC = () => {
         description: base.description,
         photo_url: base.photo_url,
         is_recurring: base.is_recurring,
+        details: base.details,
         created_at: editing?.created_at ?? nowISO(),
         updated_at: nowISO(),
       };
@@ -141,7 +169,7 @@ const AddExpense: React.FC = () => {
     }
 
     dispatch(loadMonthThunk(month));
-    setTimeout(() => router.push('/tabs/expenses'), editing ? 400 : 400);
+    setTimeout(() => router.push('/tabs/expenses'), 400);
   };
 
   return (
@@ -164,16 +192,92 @@ const AddExpense: React.FC = () => {
           />
         </IonItem>
 
-        <IonItem style={{ marginBottom: 12 }}>
-          <IonInput
-            type="number"
-            label={`Montant (${currency})`}
-            labelPlacement="stacked"
-            inputmode="numeric"
-            value={amount}
-            onIonInput={(e) => setAmount(String(e.detail.value ?? ''))}
-          />
-        </IonItem>
+        {/* Mode toggle */}
+        <div style={{ marginBottom: 12 }}>
+          <IonSegment value={mode} onIonChange={(e) => setMode(e.detail.value as 'simple' | 'detailed')}>
+            <IonSegmentButton value="simple">
+              <IonLabel>Montant unique</IonLabel>
+            </IonSegmentButton>
+            <IonSegmentButton value="detailed">
+              <IonLabel>Détail (lignes)</IonLabel>
+            </IonSegmentButton>
+          </IonSegment>
+        </div>
+
+        {/* Simple mode: single amount input */}
+        {mode === 'simple' && (
+          <IonItem style={{ marginBottom: 12 }}>
+            <IonInput
+              type="number"
+              label={`Montant (${currency})`}
+              labelPlacement="stacked"
+              inputmode="numeric"
+              value={amount}
+              onIonInput={(e) => setAmount(String(e.detail.value ?? ''))}
+            />
+          </IonItem>
+        )}
+
+        {/* Detailed mode: line items */}
+        {mode === 'detailed' && (
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8, color: 'var(--ion-color-medium)' }}>
+              Détail des postes
+            </div>
+            {details.map((d, i) => (
+              <div
+                key={i}
+                style={{
+                  background: 'var(--ion-color-step-100, rgba(0,0,0,0.04))',
+                  borderRadius: 10,
+                  padding: '10px 12px',
+                  marginBottom: 8,
+                }}
+              >
+                <div style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
+                  <IonInput
+                    placeholder="Description"
+                    value={d.description}
+                    onIonInput={(e) => updateDetail(i, 'description', String(e.detail.value ?? ''))}
+                    style={{ flex: 2 }}
+                  />
+                  {details.length > 1 && (
+                    <IonButton fill="clear" color="danger" onClick={() => removeDetail(i)} style={{ margin: 0, minWidth: 36 }}>
+                      <IonIcon icon={trashOutline} />
+                    </IonButton>
+                  )}
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <IonInput
+                    type="number"
+                    inputmode="numeric"
+                    placeholder="Qté"
+                    value={d.quantity || ''}
+                    onIonInput={(e) => updateDetail(i, 'quantity', Number(e.detail.value) || 0)}
+                    style={{ flex: 1 }}
+                  />
+                  <IonInput
+                    type="number"
+                    inputmode="numeric"
+                    placeholder={`Prix unitaire (${currency})`}
+                    value={d.unit_price || ''}
+                    onIonInput={(e) => updateDetail(i, 'unit_price', Number(e.detail.value) || 0)}
+                    style={{ flex: 2 }}
+                  />
+                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', fontSize: 13, fontWeight: 600, color: 'var(--ion-color-dark)' }}>
+                    {formatMoney(d.quantity * d.unit_price, currency)}
+                  </div>
+                </div>
+              </div>
+            ))}
+            <IonButton fill="clear" size="small" onClick={addDetail} style={{ margin: 0, '--padding-start': 0 }}>
+              <IonIcon icon={add} slot="start" /> Ajouter une ligne
+            </IonButton>
+            <div style={{ textAlign: 'right', fontWeight: 700, fontSize: 15, marginTop: 8, color: '#f97316' }}>
+              Total : {formatMoney(detailsTotal, currency)}
+            </div>
+          </div>
+        )}
 
         <IonItem style={{ marginBottom: 12 }}>
           <IonLabel>Catégorie</IonLabel>
@@ -237,9 +341,9 @@ const AddExpense: React.FC = () => {
           )}
         </div>
 
-        {numAmount > 0 ? (
+        {effectiveAmount > 0 ? (
           <IonLabel style={{ textAlign: 'center', display: 'block', marginBottom: 12 }}>
-            <small>{formatMoney(numAmount, currency)}</small>
+            <small>{formatMoney(effectiveAmount, currency)}</small>
           </IonLabel>
         ) : null}
 

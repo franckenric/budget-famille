@@ -50,7 +50,7 @@ const FixedChargesList: React.FC<{
             {formatMoney(paidTotal, currency)}/{formatMoney(total, currency)}
           </IonNote>
         </div>
-        <IonButton routerLink="/tabs/settings" fill="clear" size="small">
+        <IonButton routerLink="/tabs/global" fill="clear" size="small">
           <IonIcon icon={settingsOutline} slot="start" /> Gérer
         </IonButton>
       </div>
@@ -66,8 +66,8 @@ const FixedChargesList: React.FC<{
               Aucune charge récurrente ce mois-ci.
             </p>
           </IonText>
-          <IonButton routerLink="/tabs/settings" size="small" fill="outline">
-            Ajouter dans Réglages
+          <IonButton routerLink="/tabs/global" size="small" fill="outline">
+            Ajouter dans Global
           </IonButton>
         </div>
       ) : (
