@@ -568,60 +568,82 @@ const Dashboard: React.FC = () => {
           <h3 className="section-title">Total global</h3>
         </div>
         <div className="tile-group">
-          <div className="recent-row">
-            <div
-              className="ico-bubble"
-              style={{ background: 'rgba(59,130,246,0.12)', color: '#3b82f6' }}
-            >
-              <IonIcon icon={receiptOutline} style={{ fontSize: 18 }} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <div className="recent-title">Dépenses</div>
-              <div className="recent-sub">{viewMode === 'month' ? monthLabel(month) : weekLabel(weekRef)}</div>
-            </div>
-            <div className="recent-amount" style={{ color: 'inherit' }}>− {formatMoney(summaryExpenses, currency)}</div>
-          </div>
-          <div className="recent-row">
-            <div
-              className="ico-bubble"
-              style={{ background: 'rgba(16,185,129,0.12)', color: '#10b981' }}
-            >
-              <IonIcon icon={walletOutline} style={{ fontSize: 18 }} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <div className="recent-title">Charges fixes</div>
-              <div className="recent-sub">{viewMode === 'month' ? monthLabel(month) : weekLabel(weekRef)}</div>
-            </div>
-            <div className="recent-amount" style={{ color: 'inherit' }}>− {formatMoney(summaryCharges, currency)}</div>
-          </div>
-          <div className="recent-row">
-            <div
-              className="ico-bubble"
-              style={{ background: 'rgba(249,115,22,0.12)', color: '#f97316' }}
-            >
-              <IonIcon icon={cashOutline} style={{ fontSize: 18 }} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <div className="recent-title">Remboursement emprunts</div>
-              <div className="recent-sub">{viewMode === 'month' ? monthLabel(month) : weekLabel(weekRef)}</div>
-            </div>
-            <div className="recent-amount" style={{ color: '#f97316' }}>− {formatMoney(summaryDebtsPaid, currency)}</div>
-          </div>
-          <div
-            style={{
-              marginTop: 10,
-              paddingTop: 12,
-              borderTop: '1px solid var(--ion-color-step-300, rgba(0,0,0,0.08))',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
-            <span style={{ fontWeight: 700, fontSize: 14 }}>Grand total</span>
-            <span style={{ fontWeight: 800, fontSize: 16, color: '#ef4444' }}>
-              − {formatMoney(summaryGrandTotal, currency)}
-            </span>
-          </div>
+          {(() => {
+            const capital = viewMode === 'month' ? (summary?.capital ?? 0) : (weekSummary?.capital ?? 0);
+            const remaining = capital - summaryGrandTotal;
+            const percentUsed = capital > 0 ? Math.round((summaryGrandTotal / capital) * 100) : 0;
+            const barColor = percentUsed >= 100 ? '#ef4444' : percentUsed >= 85 ? '#f97316' : percentUsed >= 70 ? '#eab308' : '#22c55e';
+            const remainingColor = remaining >= 0 ? '#22c55e' : '#ef4444';
+
+            return (
+              <>
+                <div style={{ padding: '14px 14px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--ion-color-medium)' }}>Capital</div>
+                    <div style={{ fontSize: 18, fontWeight: 800 }}>{formatMoney(capital, currency)}</div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--ion-color-medium)' }}>Restant</div>
+                    <div style={{ fontSize: 18, fontWeight: 800, color: remainingColor }}>
+                      {remaining >= 0 ? '' : '− '}{formatMoney(Math.abs(remaining), currency)}
+                    </div>
+                  </div>
+                </div>
+
+                {capital > 0 && (
+                  <div style={{ padding: '0 14px 12px' }}>
+                    <div style={{ height: 6, borderRadius: 3, background: 'var(--ion-color-step-200, rgba(0,0,0,0.06))', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${Math.min(percentUsed, 100)}%`, borderRadius: 3, background: barColor, transition: 'width 0.3s ease' }} />
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontSize: 11, color: 'var(--ion-color-medium)' }}>
+                      <span>{percentUsed}% utilisé</span>
+                      <span>{formatMoney(summaryGrandTotal, currency)} / {formatMoney(capital, currency)}</span>
+                    </div>
+                  </div>
+                )}
+
+                <div style={{ borderTop: '1px solid var(--ion-border-color)' }}>
+                  <div className="recent-row">
+                    <div className="ico-bubble" style={{ background: 'rgba(59,130,246,0.12)', color: '#3b82f6' }}>
+                      <IonIcon icon={receiptOutline} style={{ fontSize: 18 }} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div className="recent-title">Dépenses variables</div>
+                      <div className="recent-sub">{viewMode === 'month' ? monthLabel(month) : weekLabel(weekRef)}</div>
+                    </div>
+                    <div className="recent-amount" style={{ color: 'inherit' }}>− {formatMoney(summaryExpenses, currency)}</div>
+                  </div>
+                  <div className="recent-row">
+                    <div className="ico-bubble" style={{ background: 'rgba(16,185,129,0.12)', color: '#10b981' }}>
+                      <IonIcon icon={walletOutline} style={{ fontSize: 18 }} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div className="recent-title">Charges fixes</div>
+                      <div className="recent-sub">{viewMode === 'month' ? monthLabel(month) : weekLabel(weekRef)}</div>
+                    </div>
+                    <div className="recent-amount" style={{ color: 'inherit' }}>− {formatMoney(summaryCharges, currency)}</div>
+                  </div>
+                  <div className="recent-row">
+                    <div className="ico-bubble" style={{ background: 'rgba(249,115,22,0.12)', color: '#f97316' }}>
+                      <IonIcon icon={cashOutline} style={{ fontSize: 18 }} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div className="recent-title">Remboursement emprunts</div>
+                      <div className="recent-sub">{viewMode === 'month' ? monthLabel(month) : weekLabel(weekRef)}</div>
+                    </div>
+                    <div className="recent-amount" style={{ color: '#f97316' }}>− {formatMoney(summaryDebtsPaid, currency)}</div>
+                  </div>
+                </div>
+
+                <div style={{ padding: '12px 14px', borderTop: '1px solid var(--ion-border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: percentUsed >= 100 ? 'rgba(239,68,68,0.06)' : 'transparent', borderRadius: '0 0 var(--app-card-radius) var(--app-card-radius)' }}>
+                  <span style={{ fontWeight: 700, fontSize: 14 }}>Grand total</span>
+                  <span style={{ fontWeight: 800, fontSize: 17, color: barColor }}>
+                    − {formatMoney(summaryGrandTotal, currency)}
+                  </span>
+                </div>
+              </>
+            );
+          })()}
         </div>
 
         {/* Paiement modal */}
