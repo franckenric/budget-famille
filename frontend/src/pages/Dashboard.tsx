@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
+  IonAlert,
   IonButton,
   IonContent,
   IonDatetime,
@@ -29,14 +30,17 @@ import {
   pieChartOutline,
   cashOutline,
   checkmarkCircle,
+  pencilOutline,
+  trashOutline,
 } from 'ionicons/icons';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { useIonRouter } from '@ionic/react';
 import { loadMonthThunk, refreshMonthThunk, setMonth } from '../store/budgetSlice';
-import { loadDebtsThunk, recordPaymentThunk, undoPaymentThunk } from '../store/debtsSlice';
+import { loadDebtsThunk, recordPaymentThunk, removeDebtThunk } from '../store/debtsSlice';
 import BudgetProgress from '../components/BudgetProgress';
 import CategoryPie from '../components/CategoryPie';
 import FixedChargesList from '../components/FixedChargesList';
+import DebtHistoryModal from '../components/DebtHistoryModal';
 import EmptyState from '../components/EmptyState';
 import { categoryColor, categoryIcon, categoryLabel } from '../constants';
 import type { BudgetSummary, Debt } from '../types';
@@ -59,6 +63,7 @@ const Dashboard: React.FC = () => {
   );
   const { debts } = useAppSelector((s) => s.debts);
   const userCurrency = useAppSelector((s) => s.auth.user?.currency);
+  const user = useAppSelector((s) => s.auth.user);
   const currency = budget?.currency ?? userCurrency ?? 'MGA';
   const [toast, setToast] = useState<{ message: string; color: string } | null>(null);
 
@@ -189,6 +194,7 @@ const Dashboard: React.FC = () => {
   const [payDate, setPayDate] = useState(toISODate(new Date()));
   const [showPayDate, setShowPayDate] = useState(false);
   const [historyDebt, setHistoryDebt] = useState<Debt | null>(null);
+  const [toDelete, setToDelete] = useState<Debt | null>(null);
 
   const openPayModal = (d: Debt) => {
     setPayAmount('');
@@ -209,10 +215,12 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  const undoPayment = async (d: Debt, index: number) => {
-    const res = await dispatch(undoPaymentThunk({ id: d.id, index }));
+  const confirmDelete = async () => {
+    if (!toDelete) return;
+    const res = await dispatch(removeDebtThunk(toDelete.id));
+    setToDelete(null);
     if (res.meta.requestStatus === 'fulfilled') {
-      setToast({ message: 'Paiement annulé.', color: 'success' });
+      setToast({ message: 'Emprunt supprimé.', color: 'success' });
       dispatch(loadDebtsThunk());
     }
   };
@@ -224,8 +232,22 @@ const Dashboard: React.FC = () => {
   return (
     <IonPage>
       <IonHeader>
-        <IonToolbar>
-          <IonTitle>Budget-Famille</IonTitle>
+        <IonToolbar className="dash-toolbar">
+          <div className="dash-greet">
+            <div className="dash-greet-hello">
+              {user?.full_name
+                ? `Bonjour, ${user.full_name.split(' ')[0]}`
+                : 'Bonjour'}
+            </div>
+            <div className="dash-greet-date">
+              {new Date().toLocaleDateString('fr-FR', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+              })}
+            </div>
+          </div>
         </IonToolbar>
       </IonHeader>
       <IonContent className="ion-padding">
@@ -267,6 +289,53 @@ const Dashboard: React.FC = () => {
           ) : (
             <BudgetProgress summary={weekSummary} currency={currency} debtPayments={viewMode === 'month' ? debtPaymentsThisMonth : debtPaymentsWeek} />
           )
+        )}
+
+        {/* Stat tiles — month only */}
+        {viewMode === 'month' && summary && (
+          <div className="stat-tiles">
+            <div className="stat-tile">
+              <div className="stat-label">Restant</div>
+              <div
+                className="stat-value"
+                style={{ color: summary.remaining - debtPaymentsThisMonth >= 0 ? '#16a34a' : '#dc2626' }}
+              >
+                {formatMoney(Math.abs(summary.remaining - debtPaymentsThisMonth), currency)}
+              </div>
+              <div className="stat-sub">
+                {summary.remaining - debtPaymentsThisMonth >= 0 ? 'disponible' : 'de dépassement'}
+              </div>
+            </div>
+            <div className="stat-tile">
+              <div className="stat-label">Budget utilisé</div>
+              <div className="stat-value">{Math.round(summary.percent_spent)}%</div>
+              <div className="stat-bar">
+                <span
+                  style={{
+                    width: `${Math.min(summary.percent_spent, 100)}%`,
+                    background:
+                      summary.percent_spent >= 100
+                        ? '#ef4444'
+                        : summary.percent_spent >= 70
+                          ? '#f97316'
+                          : '#22c55e',
+                  }}
+                />
+              </div>
+            </div>
+            <div className="stat-tile">
+              <div className="stat-label">Charges fixes payées</div>
+              <div className="stat-value">
+                {summary.fixed_paid_count}/{summary.fixed_total_count}
+              </div>
+              <div className="stat-sub">{formatMoney(summary.total_fixed, currency)}</div>
+            </div>
+            <div className="stat-tile">
+              <div className="stat-label">Dépenses</div>
+              <div className="stat-value">{summary.variable_count}</div>
+              <div className="stat-sub">{formatMoney(summary.total_variable, currency)}</div>
+            </div>
+          </div>
         )}
 
         {/* Quick actions — month only */}
@@ -419,9 +488,27 @@ const Dashboard: React.FC = () => {
 
                   {/* Repaid badge */}
                   {d.is_repaid && (
-                    <div style={{ fontSize: 12, color: '#16a34a', fontWeight: 600, textAlign: 'center', padding: '8px 0' }}>
-                      ✓ Remboursé
-                    </div>
+                    <>
+                      <div style={{ fontSize: 12, color: '#16a34a', fontWeight: 600, textAlign: 'center', padding: '6px 0 2px' }}>
+                        ✓ Remboursé
+                      </div>
+                      <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                        {payments.length > 0 && (
+                          <IonButton size="small" fill="outline" className="filter-btn" style={{ margin: 0, fontSize: 12, flex: '1 1 auto' }}
+                            onClick={() => setHistoryDebt(d)}>
+                            Paiements ({payments.length})
+                          </IonButton>
+                        )}
+                        <IonButton size="small" fill="outline" className="filter-btn" style={{ margin: 0, fontSize: 12, flex: '1 1 auto' }}
+                          onClick={() => router.push(`/tabs/debts/add?edit=${d.id}`)}>
+                          Modifier
+                        </IonButton>
+                        <IonButton size="small" fill="clear" className="filter-btn" style={{ margin: 0, fontSize: 12, flex: '1 1 auto', color: 'var(--ion-color-danger)' }}
+                          onClick={() => setToDelete(d)}>
+                          Supprimer
+                        </IonButton>
+                      </div>
+                    </>
                   )}
                 </div>
               );
@@ -696,87 +783,23 @@ const Dashboard: React.FC = () => {
         </IonModal>
 
         {/* Historique de paiements */}
-        <IonModal isOpen={!!historyDebt} onDidDismiss={() => setHistoryDebt(null)}>
-          <IonHeader>
-            <IonToolbar>
-              <IonTitle>
-                {historyDebt ? `Historique — ${historyDebt.lender_name}` : ''}
-              </IonTitle>
-            </IonToolbar>
-          </IonHeader>
-          <IonContent className="ion-padding">
-            {historyDebt &&
-              (() => {
-                const current = debts.find((dd) => dd.id === historyDebt.id) ?? historyDebt;
-                const payments = current.payments ?? [];
-                const paidTotal = (d: Debt) => (d.payments ?? []).reduce((s, p) => s + p.amount, 0);
-                return (
-                  <>
-                    {payments.length === 0 ? (
-                      <div style={{ textAlign: 'center', color: 'var(--ion-color-medium)', padding: '40px 0' }}>
-                        Aucun paiement enregistré pour le moment.
-                      </div>
-                    ) : (
-                      <div className="tile-group">
-                        {payments.map((p, i) => (
-                          <div key={i} className="recent-row">
-                            <div
-                              className="ico-bubble"
-                              style={{ background: 'rgba(16,185,129,0.12)', color: '#10b981' }}
-                            >
-                              <IonIcon icon={checkmarkCircle} style={{ fontSize: 16 }} />
-                            </div>
-                            <div style={{ flex: 1 }}>
-                              <div className="recent-title">Paiement #{payments.length - i}</div>
-                              <div className="recent-sub">{formatDay(p.date)}</div>
-                            </div>
-                            <div className="recent-amount" style={{ color: '#10b981' }}>
-                              − {formatMoney(p.amount, currency)}
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => undoPayment(current, i)}
-                              style={{
-                                background: 'none',
-                                border: 'none',
-                                color: 'var(--ion-color-danger)',
-                                fontSize: 14,
-                                padding: '0 4px',
-                                cursor: 'pointer',
-                              }}
-                              aria-label="Annuler ce paiement"
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    <div
-                      style={{
-                        marginTop: 16,
-                        paddingTop: 12,
-                        borderTop: '1px solid var(--ion-color-step-300, rgba(0,0,0,0.08))',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                      }}
-                    >
-                      <span style={{ fontWeight: 700, fontSize: 14 }}>
-                        Payé {formatMoney(paidTotal(current), currency)} / {formatMoney(current.amount, currency)} {currency}
-                      </span>
-                      <span style={{ fontWeight: 800, fontSize: 15, color: '#f97316' }}>
-                        Reste {formatMoney(Math.max(0, current.amount - paidTotal(current)), currency)}
-                      </span>
-                    </div>
-                    <IonButton expand="block" style={{ marginTop: 16 }} onClick={() => setHistoryDebt(null)}>
-                      Fermer
-                    </IonButton>
-                  </>
-                );
-              })()}
-          </IonContent>
-        </IonModal>
+        <DebtHistoryModal
+          debt={debts.find((dd) => dd.id === historyDebt?.id) ?? historyDebt}
+          isOpen={!!historyDebt}
+          onDismiss={() => setHistoryDebt(null)}
+          currency={currency}
+        />
+
+        <IonAlert
+          isOpen={!!toDelete}
+          header="Supprimer cet emprunt ?"
+          message={toDelete ? `${toDelete.lender_name} — ${formatMoney(toDelete.amount, currency)}` : undefined}
+          buttons={[
+            { text: 'Annuler', role: 'cancel' },
+            { text: 'Supprimer', role: 'destructive', handler: () => confirmDelete() },
+          ]}
+          onDidDismiss={() => setToDelete(null)}
+        />
 
         <IonToast
           isOpen={!!toast}

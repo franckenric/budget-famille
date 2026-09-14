@@ -500,6 +500,8 @@ html.dark .hero-card {
   height: 50px;
   --border-radius: 16px;
   font-weight: 600;
+  flex: 1;
+  min-width: 0;
 }
 .quick-actions .primary-action {
   --background: linear-gradient(135deg, var(--ion-color-primary), var(--ion-color-secondary));
@@ -888,4 +890,334 @@ ion-modal ion-header ion-toolbar {
 }
 ion-modal ion-toolbar ion-title {
   font-size: 16px;
+}
+
+/* ============================================================
+   Dashboard polish — greeting, gauge, stat tiles
+   ============================================================ */
+
+/* Greeting header */
+.dash-greet {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 6px 10px;
+}
+.dash-greet-hello {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ion-text-color, #0f172a);
+}
+.dash-greet-date {
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: capitalize;
+  color: var(--ion-color-medium);
+  margin-top: 2px;
+}
+
+/* Hero gauge (ring) */
+.hero-gauge-wrap {
+  position: relative;
+  width: 78px;
+  height: 78px;
+  flex-shrink: 0;
+}
+.hero-gauge-wrap svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  transform: rotate(0deg);
+}
+.hero-gauge-bg {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.22);
+  stroke-width: 10;
+}
+.hero-gauge-fg {
+  fill: none;
+  stroke-linecap: round;
+  stroke-width: 10;
+  transition: stroke-dasharray 0.5s ease;
+}
+.hero-gauge-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  padding-top: 25px;
+  font-size: 19px;
+  font-weight: 800;
+  color: #fff;
+}
+.hero-gauge-label small {
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0.85;
+  margin-left: 1px;
+}
+
+/* Rest row under hero top */
+.hero-rest-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 2px 0 12px;
+  flex-wrap: wrap;
+}
+.hero-rest-amount {
+  margin-left: auto;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #fff;
+}
+.hero-card .hero-alert {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+}
+
+/* Stat tiles — mini progress bar */
+.stat-tile .stat-bar {
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+  margin-top: 8px;
+}
+html.dark .stat-tile .stat-bar {
+  background: rgba(255, 255, 255, 0.1);
+}
+.stat-tile .stat-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+.stat-tile .stat-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+/* ============================================================
+   Settings polish
+   ============================================================ */
+.settings-card .settings-profile-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.settings-card .settings-profile-row .avatar-gradient {
+  flex-shrink: 0;
+}
+.settings-name {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+.settings-divider {
+  height: 1px;
+  background: var(--ion-border-color);
+  margin: 16px 0 14px;
+}
+.settings-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ion-color-medium);
+  margin-bottom: 10px;
+}
+.settings-capital-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.settings-capital-row ion-input {
+  flex: 1;
+  --background: rgba(15, 23, 42, 0.04);
+  --border-radius: 12px;
+  --padding-start: 14px;
+  --padding-end: 14px;
+}
+html.dark .settings-capital-row ion-input {
+  --background: rgba(255, 255, 255, 0.06);
+}
+.settings-threshold-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ion-color-medium);
+  margin: 10px 4px 2px;
+}
+.settings-sync-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ============================================================
+   Stats polish
+   ============================================================ */
+.stat-tile-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 9px;
+  flex-shrink: 0;
+}
+.chart-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 14px 0;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: -0.01em;
+}
+.chart-head ion-icon {
+  font-size: 17px;
+  color: var(--ion-color-primary);
+}
+
+/* ============================================================
+   Global tab polish (dettes / récurrentes)
+   ============================================================ */
+.section-note {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 12px;
+  color: var(--ion-color-medium);
+  line-height: 1.45;
+}
+.debt-summary-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.1), rgba(249, 115, 22, 0.04));
+  border: 1px solid rgba(249, 115, 22, 0.22);
+  border-radius: 18px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  box-shadow: 0 4px 12px -6px rgba(249, 115, 22, 0.35);
+}
+/* .debt-summary-card .ds-label */
+.debt-summary-card .ds-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ion-color-medium);
+}
+.debt-summary-card .ds-value {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #f97316;
+  margin-top: 2px;
+}
+.debt-summary-card .ds-side {
+  margin-left: auto;
+  text-align: right;
+  font-size: 12px;
+  color: var(--ion-color-medium);
+  line-height: 1.7;
+}
+.debt-summary-card .ds-side b {
+  color: var(--ion-text-color, #0f172a);
+  font-weight: 700;
+}
+.debt-card {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--ion-border-color);
+}
+.debt-card:last-child {
+  border-bottom: none;
+}
+.debt-card.is-repaid {
+  opacity: 0.6;
+}
+.debt-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.debt-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.debt-meta {
+  flex: 1;
+  min-width: 0;
+}
+.debt-title {
+  font-weight: 600;
+  font-size: 15px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.debt-title.is-repaid {
+  text-decoration: line-through;
+}
+.debt-sub {
+  font-size: 12px;
+  color: var(--ion-color-medium);
+  margin-top: 2px;
+}
+.debt-body {
+  margin-top: 10px;
+  padding-left: 52px;
+}
+.debt-payhead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: var(--ion-color-medium);
+  margin-bottom: 4px;
+}
+.debt-payhead .pct {
+  font-weight: 700;
+  color: var(--ion-text-color, #0f172a);
+}
+.debt-rest {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  margin-top: 6px;
+  font-weight: 600;
+  color: var(--ion-color-medium);
+}
+.debt-rest .amount {
+  color: #f97316;
+}
+.debt-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+  align-items: center;
+}
+html.dark .debt-summary-card {
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.16), rgba(249, 115, 22, 0.05));
 }

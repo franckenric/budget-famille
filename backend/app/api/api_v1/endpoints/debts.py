@@ -144,6 +144,33 @@ def remove_debt_payment(
     return crud.debts.update(db, db_obj=debt, obj_in=update)
 
 
+@router.patch("/{debt_id}/payments/{payment_index}", response_model=schemas.Debts)
+def update_debt_payment(
+    *,
+    db: Session = Depends(deps.get_db),
+    debt_id: str,
+    payment_index: int,
+    payment: schemas.DebtPayment,
+    current_user: models.Users = Depends(deps.get_current_active_user),
+) -> Any:
+    """Modify a recorded payment (amount / date)."""
+    debt = _debt_for_user(db, debt_id, current_user)
+    payments = list(debt.payments or [])
+    if payment_index < 0 or payment_index >= len(payments):
+        raise HTTPException(status_code=400, detail="Invalid payment index")
+    payments[payment_index] = {
+        "date": payment.date.isoformat(),
+        "amount": payment.amount,
+    }
+    total_paid = sum(p["amount"] for p in payments)
+    update = schemas.DebtsUpdate(
+        payments=payments,
+        is_repaid=total_paid >= debt.amount,
+        repaid_date=payment.date if total_paid >= debt.amount else None,
+    )
+    return crud.debts.update(db, db_obj=debt, obj_in=update)
+
+
 @router.patch("/{debt_id}/repay", response_model=schemas.Debts)
 def toggle_repay_debt(
     *,

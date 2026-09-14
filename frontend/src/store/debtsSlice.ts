@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { Debt } from '../types';
-import { listDebts, createDebt, updateDebt, recordDebtPayment, removeDebtPayment, markDebtRepaid, deleteDebt } from '../services/endpoints';
+import { listDebts, createDebt, updateDebt, recordDebtPayment, removeDebtPayment, updateDebtPayment, markDebtRepaid, deleteDebt } from '../services/endpoints';
 
 export interface DebtsState {
   debts: Debt[];
@@ -72,6 +72,17 @@ export const undoPaymentThunk = createAsyncThunk(
   },
 );
 
+export const editPaymentThunk = createAsyncThunk(
+  'debts/editPayment',
+  async ({ id, index, payment }: { id: string; index: number; payment: { date: string; amount: number } }, { rejectWithValue }) => {
+    try {
+      return await updateDebtPayment(id, index, payment);
+    } catch (err) {
+      return rejectWithValue((err as Error).message);
+    }
+  },
+);
+
 export const toggleRepaidThunk = createAsyncThunk(
   'debts/toggleRepaid',
   async (id: string, { rejectWithValue }) => {
@@ -129,6 +140,10 @@ const debtsSlice = createSlice({
         if (idx >= 0) state.debts[idx] = action.payload;
       })
       .addCase(undoPaymentThunk.fulfilled, (state, action) => {
+        const idx = state.debts.findIndex((d) => d.id === action.payload.id);
+        if (idx >= 0) state.debts[idx] = action.payload;
+      })
+      .addCase(editPaymentThunk.fulfilled, (state, action) => {
         const idx = state.debts.findIndex((d) => d.id === action.payload.id);
         if (idx >= 0) state.debts[idx] = action.payload;
       })

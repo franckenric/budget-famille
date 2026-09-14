@@ -11,10 +11,16 @@ import Tabs from "./pages/Tabs";
 import { initConnectivity, isOnline } from "./services/connectivity";
 import { fullSync } from "./services/sync";
 import { api } from "./services/api";
+import {
+  cancelAllFixedChargeNotifications,
+  syncFixedChargeNotifications,
+} from "./services/notifications";
 
 const App: React.FC = () => {
   const dispatch = useAppDispatch();
   const token = useAppSelector((s) => s.auth.token);
+  const fixedCharges = useAppSelector((s) => s.budget.fixedCharges);
+  const currency = useAppSelector((s) => s.budget.budget?.currency);
   const [connected, setConnected] = useState(isOnline());
   const [banner, setBanner] = useState<string | null>(null);
 
@@ -47,6 +53,14 @@ const App: React.FC = () => {
       fullSync().catch(() => undefined);
     }
   }, [token, dispatch]);
+
+  useEffect(() => {
+    if (token) {
+      syncFixedChargeNotifications(fixedCharges, { currency }).catch(() => undefined);
+    } else {
+      cancelAllFixedChargeNotifications().catch(() => undefined);
+    }
+  }, [token, fixedCharges, currency]);
 
   return (
     <IonApp>

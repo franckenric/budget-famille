@@ -36,6 +36,7 @@ import type { FixedCharge } from '../types';
 import { formatMoney, monthLabel, nowISO, uid } from '../utils/format';
 import { isOnline } from '../services/connectivity';
 import { offlineUpsertFixedCharge, offlineDeleteFixedCharge } from '../services/sync';
+import { syncFixedChargeNotifications } from '../services/notifications';
 
 const Charges: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -83,6 +84,10 @@ const Charges: React.FC = () => {
     dispatch(refreshMonthThunk(month));
   };
 
+  const reschedule = (charges: FixedCharge[]) => {
+    syncFixedChargeNotifications(charges, { currency }).catch(() => undefined);
+  };
+
   const save = async () => {
     const numAmount = Number(amount);
     const numDay = Number(dueDay);
@@ -115,6 +120,11 @@ const Charges: React.FC = () => {
       };
       await offlineUpsertFixedCharge(charge);
       setToast({ message: 'Enregistré hors ligne.', color: 'warning' });
+      reschedule(
+        editing
+          ? fixedCharges.map((c) => (c.id === charge.id ? charge : c))
+          : [...fixedCharges, charge],
+      );
     }
     closeModal();
   };
@@ -128,6 +138,7 @@ const Charges: React.FC = () => {
       const updated: FixedCharge = { ...c, is_paid: !c.is_paid, updated_at: nowISO() };
       offlineUpsertFixedCharge(updated).then(() => {
         setToast({ message: 'Changement enregistré hors ligne.', color: 'warning' });
+        reschedule(fixedCharges.map((x) => (x.id === c.id ? updated : x)));
       });
     }
   };
@@ -139,6 +150,7 @@ const Charges: React.FC = () => {
     } else {
       await offlineDeleteFixedCharge(toDelete.id);
       setToast({ message: 'Supprimé hors ligne.', color: 'warning' });
+      reschedule(fixedCharges.filter((c) => c.id !== toDelete.id));
     }
     setToDelete(null);
     dispatch(refreshMonthThunk(month));

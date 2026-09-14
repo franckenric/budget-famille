@@ -2,8 +2,6 @@ import { useEffect, useState } from 'react';
 import {
   IonAlert,
   IonButton,
-  IonCard,
-  IonCardContent,
   IonContent,
   IonHeader,
   IonIcon,
@@ -15,11 +13,11 @@ import {
   IonPage,
   IonRange,
   IonTitle,
-  IonToolbar,
   IonToggle,
   IonToast,
+  IonToolbar,
 } from '@ionic/react';
-import { logOutOutline, syncOutline, walletOutline } from 'ionicons/icons';
+import { logOutOutline, syncOutline, walletOutline, notificationsOutline } from 'ionicons/icons';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { logout, updateProfileThunk } from '../store/authSlice';
 import { refreshMonthThunk, saveBudgetThunk } from '../store/budgetSlice';
@@ -27,17 +25,24 @@ import { fullSync, pendingCount, resetSyncCursor } from '../services/sync';
 import RecurringChargesSection from '../components/RecurringChargesSection';
 import { formatMoney } from '../utils/format';
 import { isOnline } from '../services/connectivity';
+import {
+  cancelAllFixedChargeNotifications,
+  remindersEnabled,
+  setRemindersEnabled,
+  syncFixedChargeNotifications,
+} from '../services/notifications';
 
 const Settings: React.FC = () => {
   const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth.user);
-  const { budget, month } = useAppSelector((s) => s.budget);
+  const { budget, month, fixedCharges } = useAppSelector((s) => s.budget);
   const currency = budget?.currency ?? user?.currency ?? 'MGA';
 
   const [capitalInput, setCapitalInput] = useState<string>('');
   const [yellow, setYellow] = useState<number>(user?.yellow_threshold ?? 70);
   const [red, setRed] = useState<number>(user?.red_threshold ?? 85);
   const [blocking, setBlocking] = useState<boolean>(user?.blocking_enabled ?? false);
+  const [reminders, setReminders] = useState<boolean>(remindersEnabled());
   const [saving, setSaving] = useState(false);
   const [pending, setPending] = useState(0);
   const [toast, setToast] = useState<{ message: string; color: string } | null>(null);
@@ -76,6 +81,22 @@ const Settings: React.FC = () => {
     }
   };
 
+  const toggleReminders = async (on: boolean) => {
+    setReminders(on);
+    setRemindersEnabled(on);
+    try {
+      if (on) {
+        await syncFixedChargeNotifications(fixedCharges, { currency });
+        setToast({ message: 'Rappels d\u2019échéance activés.', color: 'success' });
+      } else {
+        await cancelAllFixedChargeNotifications();
+        setToast({ message: 'Rappels d\u2019échéance désactivés.', color: 'warning' });
+      }
+    } catch {
+      setToast({ message: 'Permission de notification refusée.', color: 'danger' });
+    }
+  };
+
   const doSync = async () => {
     setToast({ message: isOnline() ? 'Synchronisation en cours...' : 'Hors ligne.', color: 'medium' });
     await fullSync();
@@ -89,6 +110,13 @@ const Settings: React.FC = () => {
     dispatch(logout());
   };
 
+  const initials = (user?.full_name ?? 'P')
+    .split(' ')
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+
   return (
     <IonPage>
       <IonHeader>
@@ -97,113 +125,129 @@ const Settings: React.FC = () => {
         </IonToolbar>
       </IonHeader>
       <IonContent className="ion-padding">
-        <IonCard>
-          <IonCardContent>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-              <IonIcon icon={walletOutline} style={{ fontSize: 32, color: 'var(--ion-color-primary)' }} />
-              <div>
-                <h2 style={{ margin: 0 }}>{user?.full_name ?? 'Mon profil'}</h2>
-                <IonNote color="medium">{user?.email}</IonNote>
-              </div>
+        {/* Profil */}
+        <div className="settings-card">
+          <div className="settings-profile-row">
+            <div className="avatar-gradient" style={{ width: 52, height: 52, fontSize: 20 }}>
+              {initials}
             </div>
-
-            <IonItem lines="full">
-              <IonLabel position="stacked">
-                Capital du mois ({month}) — {currency}
-              </IonLabel>
-              <IonInput
-                type="number"
-                inputmode="numeric"
-                value={capitalInput}
-                onIonInput={(e) => setCapitalInput(String(e.detail.value ?? ''))}
-              />
-            </IonItem>
-            <div className="ion-justify-content-between ion-align-items-center" style={{ display: 'flex', margin: '8px 4px' }}>
-              <IonNote color="medium">{formatMoney(budget?.capital ?? 0, currency)}</IonNote>
-              <IonButton size="small" onClick={saveBudget} disabled={saving}>
-                {saving ? '...' : 'Enregistrer'}
-              </IonButton>
+            <div style={{ minWidth: 0 }}>
+              <h2 className="settings-name">{user?.full_name ?? 'Mon profil'}</h2>
+              <IonNote color="medium">{user?.email}</IonNote>
             </div>
+          </div>
 
-            <IonItem lines="none" style={{ marginTop: 8 }}>
-              <IonLabel>
-                <h3 style={{ margin: 0, fontSize: 15 }}>Seuils d'alerte</h3>
-                <IonNote color="medium">Jaune (alerte douce) : {yellow} %</IonNote>
-              </IonLabel>
-            </IonItem>
+          <div className="settings-divider" />
 
-            <IonRange
-              aria-label="Seuil jaune"
-              min={50}
-              max={95}
-              step={5}
-              value={yellow}
-              pin
-              ticks
-              snaps
-              onIonChange={(e) => setYellow(Number(e.detail.value))}
+          <div className="settings-title">Capital du mois ({month})</div>
+          <div className="settings-capital-row">
+            <IonInput
+              type="number"
+              inputmode="numeric"
+              placeholder={`Montant (${currency})`}
+              value={capitalInput}
+              onIonInput={(e) => setCapitalInput(String(e.detail.value ?? ''))}
             />
-
-            <IonItem lines="none">
-              <IonLabel>
-                <IonNote color="medium">Rouge (dépassement probable) : {red} %</IonNote>
-              </IonLabel>
-            </IonItem>
-            <IonRange
-              aria-label="Seuil rouge"
-              min={60}
-              max={100}
-              step={5}
-              value={red}
-              pin
-              ticks
-              snaps
-              onIonChange={(e) => setRed(Number(e.detail.value))}
-            />
-
-            <IonItem lines="none">
-              <IonLabel>
-                Bloquer les nouvelles dépenses au-delà du seuil rouge
-              </IonLabel>
-              <IonToggle
-                checked={blocking}
-                onIonChange={(e) => setBlocking(e.detail.checked)}
-              />
-            </IonItem>
-
-            <IonButton expand="block" onClick={saveThresholds}>
-              Enregistrer les seuils
+            <IonButton size="small" onClick={saveBudget} disabled={saving}>
+              {saving ? '...' : 'Enregistrer'}
             </IonButton>
-          </IonCardContent>
-        </IonCard>
+          </div>
+          <IonNote color="medium" style={{ display: 'block', marginTop: 6, fontSize: 12 }}>
+            {formatMoney(budget?.capital ?? 0, currency)} enregistrés pour {month}.
+          </IonNote>
+        </div>
 
+        {/* Alertes & rappels */}
+        <div className="settings-card">
+          <div className="settings-title">Alertes de budget</div>
+
+          <div className="settings-threshold-row">
+            <span>Seuil jaune</span>
+            <span style={{ color: '#f97316' }}>{yellow} %</span>
+          </div>
+          <IonRange
+            aria-label="Seuil jaune"
+            min={50}
+            max={95}
+            step={5}
+            value={yellow}
+            pin
+            ticks
+            snaps
+            onIonChange={(e) => setYellow(Number(e.detail.value))}
+          />
+
+          <div className="settings-threshold-row">
+            <span>Seuil rouge</span>
+            <span style={{ color: '#dc2626' }}>{red} %</span>
+          </div>
+          <IonRange
+            aria-label="Seuil rouge"
+            min={60}
+            max={100}
+            step={5}
+            value={red}
+            pin
+            ticks
+            snaps
+            onIonChange={(e) => setRed(Number(e.detail.value))}
+          />
+
+          <IonItem lines="none" style={{ marginTop: 8, '--padding-start': 0 }}>
+            <IonLabel>
+              <div style={{ fontWeight: 600 }}>Bloquer les nouvelles dépenses au-delà du seuil rouge</div>
+              <IonNote color="medium">Une alerte s'affichera quand le budget sera dépassé.</IonNote>
+            </IonLabel>
+            <IonToggle checked={blocking} onIonChange={(e) => setBlocking(e.detail.checked)} />
+          </IonItem>
+
+          <IonItem lines="none" style={{ '--padding-start': 0 }}>
+            <IonLabel>
+              <div style={{ fontWeight: 600 }}>
+                <IonIcon
+                  icon={notificationsOutline}
+                  style={{ fontSize: 15, marginRight: 6, verticalAlign: 'text-bottom' }}
+                />
+                Rappels des charges fixes à leur échéance
+              </div>
+              <IonNote color="medium">Notification sur votre téléphone le jour de la date d'échéance et 3 jours avant.</IonNote>
+            </IonLabel>
+            <IonToggle checked={reminders} onIonChange={(e) => toggleReminders(e.detail.checked)} />
+          </IonItem>
+
+          <IonButton expand="block" onClick={saveThresholds} style={{ marginTop: 10 }}>
+            Enregistrer les seuils
+          </IonButton>
+        </div>
+
+        {/* Charges récurrentes */}
         <div className="settings-card">
           <RecurringChargesSection />
         </div>
 
-        <IonCard>
-          <IonCardContent>
-            <IonItem lines="full">
-              <IonLabel>
-                <h3 style={{ margin: 0, fontSize: 15 }}>Synchronisation</h3>
-                <IonNote color="medium">
-                  {pending > 0 ? `${pending} opération(s) en attente` : 'À jour'}
-                </IonNote>
-              </IonLabel>
-            </IonItem>
-            <IonButton expand="block" fill="outline" onClick={doSync} style={{ marginTop: 12 }}>
-              <IonIcon icon={syncOutline} slot="start" /> Synchroniser maintenant
+        {/* Synchronisation */}
+        <div className="settings-card">
+          <div className="settings-title">Synchronisation</div>
+          <div className="settings-sync-row">
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontWeight: 600 }}>
+                <IonIcon icon={syncOutline} style={{ fontSize: 15, marginRight: 6, verticalAlign: 'text-bottom' }} />
+                État de la borne
+              </div>
+              <IonNote color="medium">
+                {pending > 0 ? `${pending} opération(s) en attente` : 'À jour'}
+              </IonNote>
+            </div>
+            <IonButton fill="outline" size="small" onClick={doSync}>
+              Synchroniser
             </IonButton>
-            <IonButton
-              expand="block"
-              fill="clear"
-              size="small"
-              onClick={() => resetSyncCursor().then(doSync)}
-            >
+          </div>
+          <div style={{ marginTop: 10 }}>
+            <IonButton expand="block" fill="clear" size="small" onClick={() => resetSyncCursor().then(doSync)}>
               Réinitialiser le cache local
             </IonButton>
-          </IonCardContent>
-        </IonCard>
+          </div>
+        </div>
 
         <IonList inset>
           <IonItem button onClick={() => setConfirmLogout(true)} color="danger">

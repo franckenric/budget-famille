@@ -245,6 +245,10 @@ export function removeDebtPayment(id: string, index: number) {
   return api.request<Debt>(`/debts/${id}/payments/${index}`, { method: 'DELETE' });
 }
 
+export function updateDebtPayment(id: string, index: number, payment: { date: string; amount: number }) {
+  return api.request<Debt>(`/debts/${id}/payments/${index}`, { method: 'PATCH', body: payment });
+}
+
 export function markDebtRepaid(id: string) {
   return api.request<Debt>(`/debts/${id}/repay`, { method: 'PATCH' });
 }

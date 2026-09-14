@@ -2,15 +2,17 @@ import { useEffect, useState } from 'react';
 import {
   IonContent,
   IonHeader,
+  IonIcon,
   IonPage,
-  IonTitle,
   IonToolbar,
 } from '@ionic/react';
+import { pieChartOutline, trendingDownOutline, trendingUpOutline } from 'ionicons/icons';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import CategoryPie from '../components/CategoryPie';
 import DailyLine from '../components/DailyLine';
 import EmptyState from '../components/EmptyState';
 import { fetchCompare } from '../services/endpoints';
+import { categoryColor, categoryIcon, categoryLabel } from '../constants';
 import type { CompareItem } from '../types';
 import { formatMoney, monthLabel, previousMonth } from '../utils/format';
 
@@ -42,8 +44,11 @@ const Stats: React.FC = () => {
   return (
     <IonPage>
       <IonHeader>
-        <IonToolbar>
-          <IonTitle>Statistiques</IonTitle>
+        <IonToolbar className="dash-toolbar">
+          <div className="dash-greet">
+            <div className="dash-greet-hello">Statistiques</div>
+            <div className="dash-greet-date">{monthLabel(month)}</div>
+          </div>
         </IonToolbar>
       </IonHeader>
       <IonContent className="ion-padding">
@@ -64,38 +69,66 @@ const Stats: React.FC = () => {
                 <div className="stat-sub">{monthLabel(month)}</div>
               </div>
               <div className="stat-tile">
-                <div className="stat-label">Catégories actives</div>
-                <div className="stat-value">{stats.categories.length}</div>
-                <div className="stat-sub">{varCount} opérations</div>
+                <div className="stat-label">Opérations</div>
+                <div className="stat-value">{varCount}</div>
+                <div className="stat-sub">
+                  {stats.categories.length} catégorie{stats.categories.length > 1 ? 's' : ''} active
+                  {stats.categories.length > 1 ? 's' : ''}
+                </div>
               </div>
+
               {topCat && topCat.total > 0 ? (
                 <div className="stat-tile">
                   <div className="stat-label">Top catégorie</div>
-                  <div className="stat-value" style={{ fontSize: 16 }}>
-                    {topCat.category}
+                  <div
+                    className="stat-value"
+                    style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 16 }}
+                  >
+                    <span
+                      className="stat-tile-icon"
+                      style={{
+                        background: `${categoryColor(topCat.category)}22`,
+                        color: categoryColor(topCat.category),
+                      }}
+                    >
+                      <IonIcon icon={categoryIcon(topCat.category)} style={{ fontSize: 14 }} />
+                    </span>
+                    {categoryLabel(topCat.category)}
                   </div>
-                  <div className="stat-sub">{formatMoney(topCat.total, currency)}</div>
+                  <div className="stat-sub">
+                    {formatMoney(topCat.total, currency)} ·{' '}
+                    {stats ? Math.round((topCat.total / stats.total_variable) * 100) : 0} % du
+                    total
+                  </div>
                 </div>
               ) : null}
-              <div
-                className="stat-tile"
-                style={{
-                  borderColor: growth !== null && growth > 0 ? 'rgba(220,38,38,0.35)' : undefined,
-                }}
-              >
+
+              <div className="stat-tile">
                 <div className="stat-label">vs {monthLabel(prev)}</div>
                 {growth !== null ? (
                   <>
                     <div
                       className="stat-value"
-                      style={{ color: growth >= 0 ? 'var(--ion-color-danger)' : 'var(--ion-color-success)' }}
+                      style={{
+                        color:
+                          growth >= 0 ? 'var(--ion-color-danger)' : 'var(--ion-color-success)',
+                      }}
                     >
                       {growth >= 0 ? '+' : ''}
                       {growth.toFixed(1)} %
                     </div>
                     <div className="stat-sub">
-                      {growth >= 0 ? '▲' : '▼'} {formatMoney(prevRow?.total_variable ?? 0, currency)}{' '}
-                      en {monthLabel(prev)}
+                      <IonIcon
+                        icon={growth >= 0 ? trendingUpOutline : trendingDownOutline}
+                        style={{
+                          fontSize: 12,
+                          verticalAlign: 'text-bottom',
+                          marginRight: 4,
+                          color:
+                            growth >= 0 ? 'var(--ion-color-danger)' : 'var(--ion-color-success)',
+                        }}
+                      />
+                      {formatMoney(prevRow?.total_variable ?? 0, currency)} en {monthLabel(prev)}
                     </div>
                   </>
                 ) : (
@@ -105,23 +138,21 @@ const Stats: React.FC = () => {
             </div>
 
             <div className="tile-group chart-card">
-              <div style={{ padding: '14px 14px 0' }}>
-                <p className="section-title" style={{ margin: 0, fontSize: 12 }}>
-                  Dépenses par catégorie
-                </p>
+              <div className="chart-head">
+                <IonIcon icon={pieChartOutline} />
+                Dépenses par catégorie
               </div>
-              <div style={{ padding: '4px 6px' }}>
+              <div style={{ padding: '4px 6px 12px' }}>
                 <CategoryPie stats={stats} currency={currency} />
               </div>
             </div>
 
             <div className="tile-group chart-card">
-              <div style={{ padding: '14px 14px 0' }}>
-                <p className="section-title" style={{ margin: 0, fontSize: 12 }}>
-                  Évolution du mois ({monthLabel(month)})
-                </p>
+              <div className="chart-head">
+                <IonIcon icon={trendingUpOutline} />
+                Évolution du mois
               </div>
-              <div style={{ padding: '4px 6px' }}>
+              <div style={{ padding: '4px 6px 12px' }}>
                 <DailyLine stats={stats} currency={currency} />
               </div>
             </div>

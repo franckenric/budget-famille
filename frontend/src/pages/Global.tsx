@@ -22,7 +22,6 @@ import {
   cashOutline,
   checkmarkCircle,
   pencilOutline,
-  planetOutline,
   timeOutline,
   trashOutline,
 } from 'ionicons/icons';
@@ -32,12 +31,11 @@ import {
   loadDebtsThunk,
   recordPaymentThunk,
   removeDebtThunk,
-  toggleRepaidThunk,
-  undoPaymentThunk,
 } from '../store/debtsSlice';
 import RecurringChargesSection from '../components/RecurringChargesSection';
 import EmptyState from '../components/EmptyState';
-import { formatDay, formatMoney, toISODate } from '../utils/format';
+import DebtHistoryModal from '../components/DebtHistoryModal';
+import { formatMoney, toISODate } from '../utils/format';
 import type { Debt } from '../types';
 
 const debtPaid = (d: Debt): number => (d.payments ?? []).reduce((s, p) => s + p.amount, 0);
@@ -68,11 +66,7 @@ const Global: React.FC = () => {
 
   const unpaidDebts = debts.filter((d) => !d.is_repaid);
   const totalRemaining = unpaidDebts.reduce((s, d) => s + debtRemaining(d), 0);
-
-  const handleToggleRepaid = async (id: string) => {
-    await dispatch(toggleRepaidThunk(id));
-    dispatch(loadDebtsThunk());
-  };
+  const repaidCount = debts.length - unpaidDebts.length;
 
   const confirmPayment = async () => {
     if (!payModal) return;
@@ -84,14 +78,6 @@ const Global: React.FC = () => {
       message: res.meta.requestStatus === 'fulfilled' ? 'Paiement enregistré.' : 'Erreur lors de l\'enregistrement.',
       color: res.meta.requestStatus === 'fulfilled' ? 'success' : 'danger',
     });
-  };
-
-  const undoPayment = async (d: Debt, index: number) => {
-    const res = await dispatch(undoPaymentThunk({ id: d.id, index }));
-    if (res.meta.requestStatus === 'fulfilled') {
-      dispatch(loadDebtsThunk());
-      setToast({ message: 'Paiement annulé.', color: 'success' });
-    }
   };
 
   const confirmDelete = async () => {
@@ -106,9 +92,11 @@ const Global: React.FC = () => {
   return (
     <IonPage>
       <IonHeader>
-        <IonToolbar>
-          <IonIcon icon={planetOutline} slot="start" style={{ marginInlineStart: 14, fontSize: 22, color: 'var(--ion-color-primary)' }} />
-          <IonTitle>Global</IonTitle>
+        <IonToolbar className="dash-toolbar">
+          <div className="dash-greet">
+            <div className="dash-greet-hello">Global</div>
+            <div className="dash-greet-date">Emprunts & charges récurrentes</div>
+          </div>
         </IonToolbar>
       </IonHeader>
       <IonContent className="ion-padding">
@@ -126,21 +114,23 @@ const Global: React.FC = () => {
           </IonButton>
         </div>
 
-        <IonText style={{ display: 'block', marginBottom: 12 }}>
-          <span style={{ fontSize: 12, color: 'var(--ion-color-medium)' }}>
-            Ces dettes ne sont pas rattachées à un mois : elles durent jusqu'au remboursement complet.
-          </span>
+        <IonText className="section-note">
+          Ces dettes ne sont pas rattachées à un mois : elles durent jusqu'au remboursement complet.
         </IonText>
 
-        {unpaidDebts.length > 0 && (
-          <div className="dash-card" style={{ marginBottom: 12, padding: '12px 16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: 12, color: 'var(--ion-color-medium)', fontWeight: 600 }}>
-                Restant global
-              </span>
-              <span style={{ fontSize: 15, fontWeight: 800, color: '#f97316' }}>
-                {formatMoney(totalRemaining, currency)}
-              </span>
+        {debts.length > 0 && (
+          <div className="debt-summary-card">
+            <div>
+              <div className="ds-label">Restant global</div>
+              <div className="ds-value">{formatMoney(totalRemaining, currency)}</div>
+            </div>
+            <div className="ds-side">
+              <div>
+                <b>{unpaidDebts.length}</b> en cours
+              </div>
+              <div>
+                <b>{repaidCount}</b> remboursée{repaidCount > 1 ? 's' : ''}
+              </div>
             </div>
           </div>
         )}
@@ -164,30 +154,23 @@ const Global: React.FC = () => {
               return (
                 <div
                   key={d.id}
-                  className="charge-row"
-                  style={{ opacity: d.is_repaid ? 0.65 : 1, flexDirection: 'column', alignItems: 'stretch', gap: 0 }}
+                  className={`debt-card${d.is_repaid ? ' is-repaid' : ''}`}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div className="debt-head">
                     <div
+                      className="debt-avatar"
                       style={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: 11,
                         background: d.is_repaid ? 'rgba(22,163,74,0.12)' : 'rgba(249,115,22,0.12)',
                         color: d.is_repaid ? '#16a34a' : '#f97316',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
                       }}
                     >
                       <IonIcon icon={d.is_repaid ? checkmarkCircle : cashOutline} style={{ fontSize: 19 }} />
                     </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: 600, fontSize: 14, textDecoration: d.is_repaid ? 'line-through' : 'none' }}>
+                    <div className="debt-meta">
+                      <div className={`debt-title${d.is_repaid ? ' is-repaid' : ''}`}>
                         {d.lender_name}
                       </div>
-                      <div style={{ fontSize: 12, color: 'var(--ion-color-medium)' }}>
+                      <div className="debt-sub">
                         {formatMoney(d.amount, currency)}
                         {d.monthly_amount && d.monthly_amount > 0 && !d.is_repaid &&
                           ` · ${new Intl.NumberFormat('fr-FR').format(d.monthly_amount)} ${currency}/mois`}
@@ -214,40 +197,65 @@ const Global: React.FC = () => {
                   </div>
 
                   {!d.is_repaid && (
-                    <div style={{ marginTop: 8, paddingLeft: 48 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--ion-color-medium)', marginBottom: 4 }}>
+                    <div className="debt-body">
+                      <div className="debt-payhead">
                         <span>
                           <IonIcon icon={timeOutline} style={{ fontSize: 12, marginRight: 4 }} />
-                          Payé {new Intl.NumberFormat('fr-FR').format(Math.round(paid))} / {new Intl.NumberFormat('fr-FR').format(d.amount)} {currency}
+                          Payé {new Intl.NumberFormat('fr-FR').format(Math.round(paid))} /{' '}
+                          {new Intl.NumberFormat('fr-FR').format(d.amount)} {currency}
                         </span>
-                        <span>{Math.round(ratio * 100)}%</span>
+                        <span className="pct">{Math.round(ratio * 100)}%</span>
                       </div>
                       <div className="mini-bar">
                         <div className="mini-bar-fill" style={{ width: `${ratio * 100}%` }} />
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginTop: 6, fontWeight: 600 }}>
-                        <span style={{ color: '#f97316' }}>Reste : − {formatMoney(remaining, currency)}</span>
+                      <div className="debt-rest">
+                        <span className="amount">Reste : − {formatMoney(remaining, currency)}</span>
                         {d.monthly_amount && d.monthly_amount > 0 && remaining > 0 && (
-                          <span style={{ color: 'var(--ion-color-medium)' }}>
-                            ~{Math.ceil(remaining / d.monthly_amount)} mois
-                          </span>
+                          <span>~{Math.ceil(remaining / d.monthly_amount)} mois</span>
                         )}
                       </div>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8, alignItems: 'center' }}>
-                        <IonButton size="small" fill="outline" className="filter-btn" style={{ margin: 0, fontSize: 12 }}
+                      <div className="debt-actions">
+                        <IonButton
+                          size="small"
+                          fill="outline"
+                          className="filter-btn"
+                          style={{ margin: 0, fontSize: 12 }}
                           onClick={() => {
                             setPayAmount('');
                             setPayDate(toISODate(new Date()));
                             setPayModal(d);
-                          }}>
+                          }}
+                        >
                           Encaisser un paiement
                         </IonButton>
                         {payments.length > 0 && (
-                          <IonButton size="small" fill="clear" className="filter-btn" style={{ margin: 0, fontSize: 12 }}
-                            onClick={() => setHistoryDebt(d)}>
+                          <IonButton
+                            size="small"
+                            fill="clear"
+                            className="filter-btn"
+                            style={{ margin: 0, fontSize: 12 }}
+                            onClick={() => setHistoryDebt(d)}
+                          >
                             Voir l'historique de paiement ({payments.length})
                           </IonButton>
                         )}
+                      </div>
+                    </div>
+                  )}
+
+                  {d.is_repaid && payments.length > 0 && (
+                    <div className="debt-body">
+                      <div className="debt-actions">
+                        <IonButton
+                          size="small"
+                          fill="outline"
+                          className="filter-btn"
+                          style={{ margin: 0, fontSize: 12 }}
+                          onClick={() => setHistoryDebt(d)}
+                        >
+                          Voir les paiements ({payments.length})
+                        </IonButton>
                       </div>
                     </div>
                   )}
@@ -258,7 +266,7 @@ const Global: React.FC = () => {
         )}
 
         {/* ============ CHARGES RÉCURRENTES (globales) ============ */}
-        <div style={{ marginTop: 16 }}>
+        <div className="settings-card" style={{ marginTop: 4 }}>
           <RecurringChargesSection />
         </div>
 
@@ -321,87 +329,12 @@ const Global: React.FC = () => {
         />
 
         {/* Historique de paiements */}
-        <IonModal isOpen={!!historyDebt} onDidDismiss={() => setHistoryDebt(null)}>
-          <IonHeader>
-            <IonToolbar>
-              <IonTitle>
-                {historyDebt ? `Historique — ${historyDebt.lender_name}` : ''}
-              </IonTitle>
-            </IonToolbar>
-          </IonHeader>
-          <IonContent className="ion-padding">
-            {historyDebt &&
-              (() => {
-                const current = debts.find((dd) => dd.id === historyDebt.id) ?? historyDebt;
-                const payments = current.payments ?? [];
-                const paidTotal = (dd: Debt) => (dd.payments ?? []).reduce((s, p) => s + p.amount, 0);
-                return (
-                  <>
-                    {payments.length === 0 ? (
-                      <div style={{ textAlign: 'center', color: 'var(--ion-color-medium)', padding: '40px 0' }}>
-                        Aucun paiement enregistré pour le moment.
-                      </div>
-                    ) : (
-                      <div className="tile-group">
-                        {payments.map((p, i) => (
-                          <div key={i} className="recent-row">
-                            <div
-                              className="ico-bubble"
-                              style={{ background: 'rgba(16,185,129,0.12)', color: '#10b981' }}
-                            >
-                              <IonIcon icon={checkmarkCircle} style={{ fontSize: 16 }} />
-                            </div>
-                            <div style={{ flex: 1 }}>
-                              <div className="recent-title">Paiement #{payments.length - i}</div>
-                              <div className="recent-sub">{formatDay(p.date)}</div>
-                            </div>
-                            <div className="recent-amount" style={{ color: '#10b981' }}>
-                              − {formatMoney(p.amount, currency)}
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => undoPayment(current, i)}
-                              style={{
-                                background: 'none',
-                                border: 'none',
-                                color: 'var(--ion-color-danger)',
-                                fontSize: 14,
-                                padding: '0 4px',
-                                cursor: 'pointer',
-                              }}
-                              aria-label="Annuler ce paiement"
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    <div
-                      style={{
-                        marginTop: 16,
-                        paddingTop: 12,
-                        borderTop: '1px solid var(--ion-color-step-300, rgba(0,0,0,0.08))',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                      }}
-                    >
-                      <span style={{ fontWeight: 700, fontSize: 14 }}>
-                        Payé {formatMoney(paidTotal(current), currency)} / {formatMoney(current.amount, currency)} {currency}
-                      </span>
-                      <span style={{ fontWeight: 800, fontSize: 15, color: '#f97316' }}>
-                        Reste {formatMoney(Math.max(0, current.amount - paidTotal(current)), currency)}
-                      </span>
-                    </div>
-                    <IonButton expand="block" style={{ marginTop: 16 }} onClick={() => setHistoryDebt(null)}>
-                      Fermer
-                    </IonButton>
-                  </>
-                );
-              })()}
-          </IonContent>
-        </IonModal>
+        <DebtHistoryModal
+          debt={debts.find((dd) => dd.id === historyDebt?.id) ?? historyDebt}
+          isOpen={!!historyDebt}
+          onDismiss={() => setHistoryDebt(null)}
+          currency={currency}
+        />
 
         <IonToast
           isOpen={!!toast}
